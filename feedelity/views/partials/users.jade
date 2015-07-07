@@ -1,0 +1,49 @@
+.page-header
+  h1 Tags configuration
+.modal.fade#modFeed(tabindex="-1", role="dialog", aria-labelledby="Edit feed", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modFeedLbl.modal-title Edit feed
+      .modal-body
+        form(role='form', name='editFeedForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUrl') URL
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          | &nbsp;
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+#form-feed.hidden-xs
+  form.form-inline.pull-right(role='form', name='addFeedForm')
+    .form-group
+      label.sr-only(for='addUrl') URL
+      input.input-sm.form-control#addUrl(type="url", name="addUrl", placeholder='Enter URL', size='60', ng-model="addFeed.url", required) 
+    button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add
+  .clear
+table.table.table-striped.table-bordered.table-hover
+  thead
+    tr
+      th #
+      th Name
+      th Boot Value
+      th Actions
+  tbody
+    tr(ng-repeat='tag in tags | filter:searchText')
+      td {{tag._id}}
+      td {{tag.name}}
+      td {{tag.boostvalue}}
+      td
+        a.color-view(ng-href='#/view')
+          i.fa.fa-eye.fa-lg
+        a.color-edit(ng-href='#/edit/{{tag._id}}')
+          i.fa.fa-pencil.fa-lg
+        a.color-delete(ng-click='Delete(tag._id)')
+          i.fa.fa-trash-o.fa-lg

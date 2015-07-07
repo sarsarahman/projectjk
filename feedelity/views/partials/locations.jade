@@ -1,0 +1,41 @@
+.page-header
+  h1 Location configuration
+.modal.fade#modLocation(tabindex="-1", role="dialog", aria-labelledby="Edit Location", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modLocationLbl.modal-title Edit Location
+      .modal-body
+        form(role='form', name='editLocationForm')
+          input(type='hidden')
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editLocation.name") 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+#form-feed.hidden-xs
+  form.form-inline.pull-right(role='form', name='addLocationForm')
+    .form-group
+      label.sr-only(for='addLocation') Location
+      input.input-sm.form-control#addLocation(type="text", name="addLocation", placeholder='Enter Location', size='60', ng-model="addLocation.name", required) 
+    button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add
+  .clear
+table.table.table-striped.table-bordered.table-hover
+  thead
+    tr
+      th #
+      th Name
+      th Actions
+  tbody
+    tr(ng-repeat='location in locations track by $index| filter:searchText')
+      td {{location._id}}
+      td {{location.name}}
+      td
+        a.color-edit(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modLocation")
+          i.glyphicon.glyphicon-pencil
+        a.color-delete(ng-click='delete($index)')
+          i.glyphicon.glyphicon-trash

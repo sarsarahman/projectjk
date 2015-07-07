@@ -1,0 +1,45 @@
+.page-header
+  h1 {{type | capitalize}} articles 
+    small 
+      span.badge {{articles.length}}
+#form-feed
+  form.form-horizontal(role='form', name='searchForm')
+    .form-group
+      .col-xs-2.hidden-xs
+        select.input-sm.form-control#search-feed(name="searchFeed", ng-model="search.feed", ng-options='feed.name for feed in feeds')
+          option(value="") -- select feed --
+      .col-xs-3.hidden-xs
+        input.input-sm.form-control#search-text(type="text", name="searchText", placeholder='Enter Text', size='30', ng-model="search.text") 
+      .col-xs-7
+        .btn-group.btn-group-sm.pull-right
+          button.btn.btn-primary(type="button", ng-click='refresh()')
+            i.glyphicon.glyphicon-refresh
+            |  Refresh
+          button.btn.btn-primary(type="button", ng-click='ensureReadAll()')
+            i.glyphicon.glyphicon-folder-open
+            |  Read all
+p(ng-show='articles.length == 0') No such articles.
+.panel-group#accArticles
+  .panel.panel-default(ng-repeat='article in articles | filter:search.text | feedSelected:search.feed')
+    .panel-heading()
+      h4(ng-class="(article.read == true) ? 'panel-title article-read' : 'panel-title'")
+        a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", onclick='return false;') {{article.title | limitTo:50}}
+        small.pull-right.article-tb
+          span {{article.date | timeago}}
+          span
+            span.label.label-info {{article._feed[0].name}}
+          span
+            a(href="{{article.link}}", target='new')
+              i.glyphicon.glyphicon-globe
+          span
+            a(href="{{article.link}}", target='new')
+              i.glyphicon.glyphicon-trash
+          span
+            a(href="", ng-click="read($index)", ng-class="(article.read == false) ? 'selected' : 'unselected'")
+              i.glyphicon.glyphicon-ok-sign
+          span
+            a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'")
+              i(ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
+    .panel-collapse.collapse(id="article-{{$index}}")
+      .panel-body
+        div(ng-bind-html="article.summary")

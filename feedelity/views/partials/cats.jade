@@ -1,0 +1,50 @@
+.page-header
+  h1 Category configuration
+.modal.fade#modCategory(tabindex="-1", role="dialog", aria-labelledby="Edit Category", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modCategoryLbl.modal-title Edit Category
+      .modal-body
+        form(role='form', name='editCategoryForm')
+          input(type='hidden')
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editCategory.name") 
+          .form-group
+            img(src='{{getImage()}}', style='width:100px;height:100px;')
+            .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false', class='btn btn-primary')
+              i.glyphicon.glyphicon-upload
+              div Select Image
+          {{editCategory}}
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+#form-feed.hidden-xs
+  form.form-inline.pull-right(role='form', name='addCategoryForm')
+    .form-group
+      label.sr-only(for='addCategory') Category
+      input.input-sm.form-control#addCategory(type="text", name="addCategory", placeholder='Enter Category', size='60', ng-model="addCategory.name", required) 
+    button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add
+  .clear
+table.table.table-striped.table-bordered.table-hover
+  thead
+    tr
+      th #
+      th Image
+      th Name
+      th Actions
+  tbody
+    tr(ng-repeat='cat in categorys track by $index| filter:searchText')
+      td
+        img(src='{{cat.imgUrl}}', style='width:100px;height:100px;')
+      td {{cat._id}}
+      td {{cat.name}}
+      td
+        a.color-edit(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modCategory")
+          i.glyphicon.glyphicon-pencil
+        a.color-delete(ng-click='delete($index)')
+          i.glyphicon.glyphicon-trash

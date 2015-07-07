@@ -1,0 +1,47 @@
+.page-header
+  h1 Tags configuration
+.modal.fade#modTag(tabindex="-1", role="dialog", aria-labelledby="Edit Tag", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modTagLbl.modal-title Edit Tag
+      .modal-body
+        form(role='form', name='editTagForm')
+          input(type='hidden')
+          .form-group
+            label(for='editboostvalue') Boost Value
+            input.form-control#editTag(type="text", name="editboostvalue", placeholder='Enter Boostvalue', size='60', ng-model="editTag.boostValue", required) 
+          | &nbsp;
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editTag.name") 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+#form-feed.hidden-xs
+  form.form-inline.pull-right(role='form', name='addTagForm')
+    .form-group
+      label.sr-only(for='addTag') Tag
+      input.input-sm.form-control#addTag(type="text", name="addTag", placeholder='Enter Tag', size='60', ng-model="addTag.name", required) 
+    button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add
+  .clear
+table.table.table-striped.table-bordered.table-hover
+  thead
+    tr
+      th #
+      th Name
+      th Boot Value
+      th Actions
+  tbody
+    tr(ng-repeat='tag in tags track by $index | filter:searchText')
+      td {{tag._id}}
+      td {{tag.name}}
+      td {{tag.boostValue}}
+      td
+        a.color-edit(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modTag")
+          i.glyphicon.glyphicon-pencil
+        a.color-delete(ng-click='delete($index)')
+          i.glyphicon.glyphicon-trash
