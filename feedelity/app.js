@@ -1,18 +1,18 @@
-																																																																																																																																																																																																																																																																																																																																																																																																									/**
+/**
  * Module dependencies
  */
 
 var express = require('express'),
-  routes = require('./routes'),
-  api = require('./routes/api'),
-  http = require('http'),
-  path = require('path');
+    routes = require('./routes'),
+    api = require('./routes/api'),
+    http = require('http'),
+    path = require('path');
 
 var app = module.exports = express();
 
 /**
-* Configuration
-*/
+ * Configuration
+ */
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -26,13 +26,13 @@ app.use(app.router);
 
 // development only
 if (app.get('env') === 'development') {
-   app.use(express.errorHandler());
+    app.use(express.errorHandler());
 };
 
 // production only
 if (app.get('env') === 'production') {
-  // TODO
-}; 
+    // TODO
+};
 
 // Routes
 app.get('/', routes.index);
@@ -40,9 +40,12 @@ app.get('/partial/:name', routes.partial);
 
 // JSON API
 app.get('/api/refresh', api.refreshFeeds);
+
+
 app.get('/api/articles/pending', api.getUnreadArticles);
 app.get('/api/articles/approved', api.getReadArticles);
 app.get('/api/articles/starred', api.getStarredArticles);
+app.post('/api/articles', api.addArticle);
 app.post('/api/articles/:id', api.updateArticle);
 app.delete('/api/articles/:id', api.delArticle);
 app.get('/api/articles/:id', api.getArticle);
@@ -79,9 +82,9 @@ app.post('/api/images', api.singleImageUpload);
 app.get('*', routes.index);
 
 /**
-* Start Server
-*/
+ * Start Server
+ */
 
-http.createServer(app).listen(app.get('port'), function () {
-  console.log('Express server listening on port ' + app.get('port'));
+http.createServer(app).listen(app.get('port'), function() {
+    console.log('Express server listening on port ' + app.get('port'));
 });

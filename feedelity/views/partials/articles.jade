@@ -1,7 +1,47 @@
 .page-header
   h1 {{type | capitalize}} articles 
     small 
-      span.badge {{articles.length}}
+      span.badge(data-toggle="modal", data-target="#modFeed") {{articles.length}}
+.modal.fade#modFeed(tabindex="-1", role="dialog", aria-labelledby="Edit feed", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modFeedLbl.modal-title Edit feed
+      .modal-body
+        form(role='form', name='editFeedForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUrl') URL
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          | &nbsp;
+          .form-group
+            label(for='editCat', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
+          .form-group
+            label(for='editCat', size='30') Category {{categoryDropDown.selected}}
+            ui-select(id='editCat',ng-model='categoryDropDown.selected', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+              ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='category.name | highlight: $select.search')
+          .form-group
+            label(for='editLocation', size='30') Location {{locationDropDown.selected}}
+            ui-select(id='editLocation',ng-model='locationDropDown.selected', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
+              ui-select-choices(repeat='location in locations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='location.name | highlight: $select.search')
+          h3 Tags
+            .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false') Select File {{testing}}
+            li(ng-repeat='f in files', style='font:smaller') {{f.name}}
+            ui-select(multiple='', ng-model='selectTags.selectedTag', theme='bootstrap', ng-disabled='disabled', style='width: 100%;')
+              ui-select-match(placeholder='Select Tags...') {{$item.name}}
+              ui-select-choices(repeat='tag in tags | filter: $select.search')
+                div(ng-bind-html='tag.name | highlight: $select.search')
+                    
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+
 #form-feed
   form.form-horizontal(role='form', name='searchForm')
     .form-group
