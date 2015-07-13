@@ -87,7 +87,131 @@ function FeedelityCtrl($scope, $http, Upload) {
 
 }
 
-function ArticlesCtrl($scope, $http, $route) {
+function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
+    // oooooooooooooooo
+
+
+
+    // $scope.dateTimeNow = function() {
+    //     $scope.date = new Date();
+    // };
+    // $scope.dateTimeNow();
+
+    // $scope.toggleMinDate = function() {
+    //     $scope.minDate = $scope.minDate ? null : new Date();
+    // };
+
+    // $scope.maxDate = new Date('2014-06-22');
+    // $scope.toggleMinDate();
+
+    // $scope.dateOptions = {
+    //     startingDay: 1,
+    //     showWeeks: false,
+    //     initDate:new Date()
+
+    // };
+
+    // // Disable weekend selection
+    // $scope.disabled = function(calendarDate, mode) {
+    //     return mode === 'day' && (calendarDate.getDay() === 0 || calendarDate.getDay() === 6);
+    // };
+
+    // $scope.hourStep = 1;
+    // $scope.minuteStep = 15;
+
+    // $scope.timeOptions = {
+    //     hourStep: [1, 2, 3],
+    //     minuteStep: [1, 5, 10, 15, 25, 30]
+    // };
+
+    // $scope.showMeridian = true;
+    // $scope.timeToggleMode = function() {
+    //     $scope.showMeridian = !$scope.showMeridian;
+    // };
+
+    // $scope.$watch("date", function(value) {
+    //     console.log('New date value:' + value);
+    // }, true);
+
+    // $scope.resetHours = function() {
+    //     $scope.date.setHours(1);
+    // };
+
+
+    $scope.today = function() {
+        $scope.dt = new Date();
+    };
+    $scope.today();
+
+    $scope.clear = function() {
+        $scope.dt = null;
+    };
+
+    // Disable weekend selection
+    $scope.disabled = function(date, mode) {
+        return (mode === 'day' && (date.getDay() === 0 || date.getDay() === 6));
+    };
+
+    $scope.toggleMin = function() {
+        $scope.minDate = $scope.minDate ? null : new Date();
+    };
+    $scope.toggleMin();
+
+    $scope.open = function($event) {
+        $event.preventDefault();
+        $event.stopPropagation();
+
+        $scope.opened = true;
+    };
+
+    $scope.dateOptions = {
+        formatYear: 'yy',
+        startingDay: 1
+    };
+
+    $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+    $scope.format = $scope.formats[0];
+
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    var afterTomorrow = new Date();
+    afterTomorrow.setDate(tomorrow.getDate() + 2);
+    $scope.events = [{
+        date: tomorrow,
+        status: 'full'
+    }, {
+        date: afterTomorrow,
+        status: 'partially'
+    }];
+
+    $scope.getDayClass = function(date, mode) {
+        if (mode === 'day') {
+            var dayToCheck = new Date(date).setHours(0, 0, 0, 0);
+
+            for (var i = 0; i < $scope.events.length; i++) {
+                var currentDay = new Date($scope.events[i].date).setHours(0, 0, 0, 0);
+
+                if (dayToCheck === currentDay) {
+                    return $scope.events[i].status;
+                }
+            }
+        }
+
+        return '';
+    };
+
+
+
+
+
+
+
+
+
+    // lllllllllllllll
+    $scope.editArticle = {};
+    $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+    $scope.format = $scope.formats[0];
     $scope.type = $route.current.type;
     var articlesUrl = '/api/articles/' + $scope.type;
     $http({
@@ -193,6 +317,38 @@ function ArticlesCtrl($scope, $http, $route) {
             data: $scope.articles[id],
             url: '/api/articles/' + $scope.articles[id]._id
         });
+    }
+
+    $scope.upload = function(files) {
+        if (files && files.length) {
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                Upload.upload({
+                    url: '/api/images',
+                    fields: {
+                        'username': $scope.username
+                    },
+                    file: file
+                }).progress(function(evt) {
+                    var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+                    console.log('progress: ' + progressPercentage + '% ' + evt.config.file.name);
+                }).success(function(data, status, headers, config) {
+                    $scope.editArticle.imgUrl = data.path;
+
+                    // returnValue=JSON.stringify(data.path);
+                    // console.log(config);
+                    // console.log('file ' + config.file.name + 'uploaded. Response: ' + JSON.stringify(data));
+                });
+            }
+        }
+    };
+
+    $scope.getImage = function() {
+        if ($scope.editArticle.imgUrl == '' || $scope.editArticle.imgUrl == undefined) {
+            return '/images/no_image.jpg';
+        } else {
+            return $scope.editArticle.imgUrl;
+        };
     }
 
 }
