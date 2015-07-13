@@ -50,3 +50,26 @@ a.unselected {
 .form-inline > * {
    margin:0px 3px;
 }
+
+datetimepicker{
+    width: 100%;
+  display: block;
+}
+
+
+.datetimepicker-wrapper {
+  vertical-align: middle;
+  display: inline-block;
+ 
+}
+
+.datetimepicker-wrapper > input {
+  margin-bottom: 0 !important;
+  width: 460px;
+}
+
+.datetimepicker-wrapper [ng-model=hours], 
+.datetimepicker-wrapper [ng-model=minutes] {
+  width: 46px !important;
+}
+

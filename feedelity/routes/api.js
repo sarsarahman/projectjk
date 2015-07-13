@@ -62,14 +62,8 @@ var articleSchema = mongoose.Schema({
     starred: Boolean,
     imgUrl: String,
     tags: [String],
-    _category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category'
-    },
-    _location: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Location'
-    },
+    category: String,
+    location: String,
 });
 
 var tagSchema = mongoose.Schema({
@@ -277,6 +271,9 @@ exports.addArticle = function(req, res) {
         description: article.description,
         author: article.author,
         date: Date.parse(article.date),
+        tags:'',
+        category:'',
+        location:'',
         link: article.link,
         guid: article.guid,
         _feed: article._feed,
@@ -312,17 +309,23 @@ exports.updateArticle = function(req, res) {
     var query = {
         _id: req.body._id
     };
+
     var update = {
         starred: req.body.starred,
         read: req.body.read,
         name: req.body.name,
         title: req.body.title,
         summary: req.body.summary,
+        date:req.body.date,
+        tags:req.body.tags,
+        category:req.body.category,
+        location:req.body.location,
         description: req.body.description,
         author: req.body.author,
         link: req.body.link,
         guid: req.body.guid,
     }
+    // console.log(update)
     Article.findOneAndUpdate(query, update).exec().then(function(article) {
         res.status(200).send(article);
     });

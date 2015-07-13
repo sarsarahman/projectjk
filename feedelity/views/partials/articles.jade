@@ -63,16 +63,9 @@
             input.form-control#editAuthor(type="text", name="editAuthor", placeholder='Enter Author', size='60', ng-model="editArticle.author", required) 
           | &nbsp;
 
-          .form-group{{dt}}
-            input.form-control(type='date', datepicker-popup='', ng-model='dt', is-open='opened', min-date='minDate', max-date="'2015-06-22'", datepicker-options='dateOptions', date-disabled='disabled(date, mode)', ng-required='true', close-text='Close')
-            span.input-group-btn
-              button.btn.btn-default(type='button', ng-click='open($event)')
-                i.glyphicon.glyphicon-calendar
-
-
-          .form-group{{dt}}
-            timepicker(ng-model='mytime', ng-change='changed()', hour-step='hstep', minute-step='mstep', show-meridian='ismeridian')
-
+          .form-group
+            label(for='date') Date : {{editArticle.date}}
+            datetimepicker(name='date',show-weeks='false', hour-step='1', minute-step='1', ng-model='editArticle.date', show-meridian='false', date-format='dd-MMM-yyyy', readonly-time='false', date-options='dateOptions')
 
 
 
@@ -83,7 +76,7 @@
                     
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
-        button.btn.btn-primary(type="button", ng-click='update()') Save
+        button.btn.btn-primary(type="button", ng-click='updateArticle()') Save
 
 #form-feed
   form.form-horizontal(role='form', name='searchForm')
