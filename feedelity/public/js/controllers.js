@@ -3,6 +3,17 @@
 /* Controllers */
 
 function FeedelityCtrl($scope, $http, Upload) {
+
+
+    $scope.feeds = [];
+    $scope.tags = [];
+    $scope.categorys = [];
+    $scope.locations = [];
+    $scope.trimmedTags = [];
+    $scope.trimmedLocations = [];
+    $scope.trimmedCategorys = [];
+
+
     $http({
         method: 'GET',
         url: '/api/feeds'
@@ -23,6 +34,13 @@ function FeedelityCtrl($scope, $http, Upload) {
     }).
     success(function(data, status, headers, config) {
         $scope.categorys = data;
+
+        $scope.trimmedCategorys = $scope.categorys.map(function(obj) {
+            return {
+                _id: obj._id,
+                name: obj.name
+            };
+        });
     }).
     error(function(data, status, headers, config) {
         $scope.categorys = []
@@ -34,6 +52,12 @@ function FeedelityCtrl($scope, $http, Upload) {
     }).
     success(function(data, status, headers, config) {
         $scope.tags = data;
+        $scope.trimmedTags = $scope.tags.map(function(obj) {
+            return {
+                _id: obj._id,
+                name: obj.name
+            };
+        });
     }).
     error(function(data, status, headers, config) {
         $scope.tags = []
@@ -45,10 +69,23 @@ function FeedelityCtrl($scope, $http, Upload) {
     }).
     success(function(data, status, headers, config) {
         $scope.locations = data;
+
+        $scope.trimmedLocations = $scope.locations.map(function(obj) {
+            return {
+                _id: obj._id,
+                name: obj.name
+            };
+        });
     }).
     error(function(data, status, headers, config) {
         $scope.locations = []
     });
+
+
+
+
+
+
 
 
     $scope.refresh = function() {
@@ -93,6 +130,8 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
         startingDay: 1,
         showWeeks: false
     };
+
+
 
     $scope.editArticle = {};
     $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
@@ -169,8 +208,10 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
             url: '/api/articles/' + $scope.editArticle._id
         }).
         success(function(data, status, headers, config) {
+            console.log('test');
+
             $scope.articles[$scope.editArticle._id] = data;
-            $scope.editArticle={};
+            $scope.editArticle = {};
             $('#modArticle').modal('hide');
         });
     }

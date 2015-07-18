@@ -36,11 +36,11 @@ var feedSchema = mongoose.Schema({
     lastErrorNb: Number,
     lastOutdatedNb: Number,
     state: String,
-    _category: {
+    category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category'
     },
-    _location: {
+    location: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Location'
     },
@@ -61,9 +61,18 @@ var articleSchema = mongoose.Schema({
     read: Boolean,
     starred: Boolean,
     imgUrl: String,
-    tags: [String],
-    category: String,
-    location: String,
+    tags: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tag'
+    }],
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
+    },
+    location: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location'
+    }
 });
 
 var tagSchema = mongoose.Schema({
@@ -107,14 +116,14 @@ exports.refreshFeeds = function(req, res) {
 
 exports.getFeed = function(req, res) {
     var id = req.params.id;
-    var feed = Feed.findById(id).exec();
+    var feed = Feed.findById(id).populate('location', 'name').populate('category', 'name').exec();
     feed.then(function(feed) {
         res.json(feed);
     });
 }
 
 exports.getFeeds = function(req, res) {
-    Feed.find().exec().then(function(feeds) {
+    Feed.find().populate('location', 'name').populate('category', 'name').exec().then(function(feeds) {
         res.json(feeds);
     });
 }
@@ -134,10 +143,26 @@ exports.delFeed = function(req, res) {
 
 exports.addFeed = function(req, res) {
     var url = req.body.url;
+
+
+    var categoryId = '';
+    var locationId = '';
+
+    // if (req.body.category.hasOwnProperty('_id')) {
+    //     categoryId = req.body.category._id;
+    // };
+
+    // if (req.body.location.hasOwnProperty('_id')) {
+    //     locationId = req.body.location._id;
+    // };
+
+
     addFeed = new Feed({
         name: url,
         url: url,
         state: 'New',
+        category: categoryId,
+        location: locationId,
         lastFetched: 0,
         lastErrors: 0,
         lastOudated: 0
@@ -151,9 +176,23 @@ exports.updateFeed = function(req, res) {
     var query = {
         _id: req.body._id
     };
+
+    var categoryId = '';
+    var locationId = '';
+
+    if (req.body.category.hasOwnProperty('_id')) {
+        categoryId = req.body.category._id;
+    };
+
+    if (req.body.location.hasOwnProperty('_id')) {
+        locationId = req.body.location._id;
+    };
+
     var update = {
         name: req.body.name,
         url: req.body.url,
+        category: categoryId,
+        location: locationId,
     }
     Feed.findOneAndUpdate(query, update).exec().then(function(feed) {
         res.status(200).send(feed);
@@ -207,6 +246,7 @@ function refreshFeed(feed, callBack) {
                 var cur = articles[i];
                 if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
             }
+
             Article.create(newArticles, function(err) {
                 var state = (errors > 0) ? 'Incomplete' : 'OK';
                 var values = {
@@ -231,7 +271,7 @@ function refreshFeed(feed, callBack) {
 exports.getUnreadArticles = function(req, res) {
     Article.find({
         read: false
-    }).populate('_feed', 'name').skip(0).limit(10).exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
@@ -240,7 +280,7 @@ exports.getUnreadArticles = function(req, res) {
 exports.getReadArticles = function(req, res) {
     Article.find({
         read: true
-    }).populate('_feed', 'name').skip(0).limit(10).exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
@@ -249,7 +289,7 @@ exports.getReadArticles = function(req, res) {
 exports.getStarredArticles = function(req, res) {
     Article.find({
         starred: true
-    }).populate('_feed', 'name').exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
@@ -257,7 +297,7 @@ exports.getStarredArticles = function(req, res) {
 
 exports.getArticle = function(req, res) {
     var id = req.params.id;
-    var article = Article.findById(id).exec();
+    var article = Article.findById(id).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec();
     article.then(function(article) {
         res.json(article);
     });
@@ -265,21 +305,37 @@ exports.getArticle = function(req, res) {
 
 exports.addArticle = function(req, res) {
     var article = req.body;
+
+    if (req.body.tags.length > 0) {
+        var tagIds = req.body.tags.map(function(tag) {
+            return tag._id;
+        });
+    };
+
+    if (req.body.category.hasOwnProperty('_id')) {
+        var categoryId = req.body.category._id;
+    };
+
+    if (req.body.location.hasOwnProperty('_id')) {
+        var locationId = req.body.location._id;
+    };
+
+
     addArticle = new Article({
-        title: article.title,
-        summary: article.summary,
-        description: article.description,
-        author: article.author,
-        date: Date.parse(article.date),
-        tags:'',
-        category:'',
-        location:'',
-        link: article.link,
-        guid: article.guid,
-        _feed: article._feed,
-        read: false,
-        starred: false,
-        tags: article.tags
+        starred: req.body.starred,
+        read: req.body.read,
+        name: req.body.name,
+        title: req.body.title,
+        summary: req.body.summary,
+        date: Date.parse(req.body.date),
+        tags: tagIds,
+        imgUrl: req.body.imgUrl,
+        category: categoryId,
+        location: locationId,
+        description: req.body.description,
+        author: req.body.author,
+        link: req.body.link,
+        guid: req.body.guid,
     });
     Article.create(addArticle).then(function(addArticle) {
         res.status(200).send(addArticle);
@@ -306,9 +362,32 @@ exports.addArticle = function(req, res) {
 
 
 exports.updateArticle = function(req, res) {
+
+    var categoryId = '';
+    var locationId = '';
+    var tagIds = [];
+
+    console.log(req.body)
+
     var query = {
         _id: req.body._id
     };
+
+    if (req.body.tags.length > 0) {
+        tagIds = req.body.tags.map(function(tag) {
+            return tag._id;
+        });
+    };
+
+    if (req.body.category.hasOwnProperty('_id')) {
+        categoryId = req.body.category._id;
+    };
+
+    if (req.body.location.hasOwnProperty('_id')) {
+        locationId = req.body.location._id;
+    };
+
+    console.log(tagIds);
 
     var update = {
         starred: req.body.starred,
@@ -316,16 +395,16 @@ exports.updateArticle = function(req, res) {
         name: req.body.name,
         title: req.body.title,
         summary: req.body.summary,
-        date:req.body.date,
-        tags:req.body.tags,
-        category:req.body.category,
-        location:req.body.location,
+        date: Date.parse(req.body.date),
+        tags: tagIds,
+        imgUrl: req.body.imgUrl,
+        category: categoryId,
+        location: locationId,
         description: req.body.description,
         author: req.body.author,
         link: req.body.link,
         guid: req.body.guid,
     }
-    // console.log(update)
     Article.findOneAndUpdate(query, update).exec().then(function(article) {
         res.status(200).send(article);
     });
@@ -358,6 +437,24 @@ function compareArticles(a1, a2) {
 }
 
 function extractArticle(item, feed) {
+
+    var categoryId = '';
+    var locationId = '';
+
+
+    if (feed.category != '') {
+        categoryId = feed.category;
+        console.log(feed.category)
+    };
+
+    if (feed.location != '') {
+        locationId = feed.location;
+        console.log(feed)
+
+    };
+
+
+
     return new Article({
         title: item.title,
         summary: item.summary,
@@ -366,10 +463,12 @@ function extractArticle(item, feed) {
         date: Date.parse(item.date),
         link: item.link,
         guid: item.guid,
+        category: categoryId,
+        location: locationId,
+        imgUrl: '',
         _feed: feed._id,
         read: false,
-        starred: false,
-        tags: item.tags
+        starred: false
     });
 }
 

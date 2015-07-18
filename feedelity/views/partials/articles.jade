@@ -30,24 +30,24 @@
           | &nbsp;
 
           .form-group
-            label(for='editCat', size='30') Category {{categoryDropDown.selected}}
+            label(for='editCat', size='30') Category 
             ui-select(id='editCat',ng-model='editArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
-              ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+              ui-select-choices(repeat='category in trimmedCategorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='category.name | highlight: $select.search')
           .form-group
-            label(for='editLocation', size='30') Location {{locationDropDown.selected}}
+            label(for='editLocation', size='30') Location 
             ui-select(id='editLocation',ng-model='editArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
-              ui-select-choices(repeat='location in locations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+              ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='location.name | highlight: $select.search')
 
           .form-group
             label(for='editTags', size='30') Tags 
-            li(ng-repeat='f in files', style='font:smaller') {{f.name}}
+            //li(ng-repeat='f in files', style='font:smaller') {{f.name}}
             ui-select(multiple='', ng-model='editArticle.tags', theme='bootstrap', ng-disabled='disabled', style='width: 100%;', name='editTags', id='editTags')
               ui-select-match(placeholder='Select Tags...') {{$item.name}}
-              ui-select-choices(repeat='tag in tags | filter: $select.search')
+              ui-select-choices(repeat='tag in trimmedTags | filter: $select.search')
                 div(ng-bind-html='tag.name | highlight: $select.search')
 
           .form-group

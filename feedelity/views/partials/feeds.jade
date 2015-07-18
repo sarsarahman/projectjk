@@ -18,23 +18,16 @@
             input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
           .form-group
             label(for='editCat', size='30') Category {{categoryDropDown.selected}}
-            ui-select(id='editCat',ng-model='categoryDropDown.selected', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+            ui-select(id='editCat',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
               ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='category.name | highlight: $select.search')
           .form-group
             label(for='editLocation', size='30') Location {{locationDropDown.selected}}
-            ui-select(id='editLocation',ng-model='locationDropDown.selected', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+            ui-select(id='editLocation',ng-model='editFeed.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
               ui-select-choices(repeat='location in locations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='location.name | highlight: $select.search')
-          h3 Tags
-            .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false') Select File {{testing}}
-            li(ng-repeat='f in files', style='font:smaller') {{f.name}}
-            ui-select(multiple='', ng-model='selectTags.selectedTag', theme='bootstrap', ng-disabled='disabled', style='width: 100%;')
-              ui-select-match(placeholder='Select Tags...') {{$item.name}}
-              ui-select-choices(repeat='tag in tags | filter: $select.search')
-                div(ng-bind-html='tag.name | highlight: $select.search')
                     
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
@@ -55,11 +48,12 @@
         th Name
         th State
         th Last checked
+        th Category
+        th Location
         th Fetched
         th Outdated
         th Errors
-        th Category
-        th Location
+        
     tbody
       tr(ng-repeat='feed in feeds track by $index')
         td 
@@ -72,13 +66,14 @@
           span.label(ng-class="bpFeedStatus(feed.state)") {{feed.state}}
         td 
           span {{feed.lastChecked | timeago}}
+        td
+          span {{ feed.category.name }}
+        td
+          span {{ feed.location.name }}
         td 
           span.badge {{ feed.lastFetchedNb }}
         td
           span.badge {{ feed.lastOutdatedNb }}
         td
           span.badge {{ feed.lastErrorNb }}
-        td
-          span.badge {{ feed._category }}
-        td
-          span.badge {{ feed._location }}
+        
