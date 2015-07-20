@@ -30,6 +30,11 @@
           | &nbsp;
 
           .form-group
+            label(for='editGuid') GUID
+            input.form-control#editUrl(type="text", name="editGuid", placeholder='Enter URL', size='60', ng-model="editArticle.guid", required) 
+          | &nbsp;
+
+          .form-group
             label(for='editCat', size='30') Category 
             ui-select(id='editCat',ng-model='editArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
@@ -78,6 +83,92 @@
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='updateArticle()') Save
 
+
+
+
+
+
+.modal.fade#modAddArticle(tabindex="-1", role="dialog", aria-labelledby="Edit article", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modArticleLbl.modal-title Add article
+      .modal-body
+        form(role='form', name='editArticleForm')
+          input(type='hidden')
+          .form-group
+            label(for='editTitle') Title
+            input.form-control#editTitle(type="text", name="editTitle", placeholder='Enter Title', size='60', ng-model="addArticle.title", required) 
+          | &nbsp;
+
+          .form-group
+            label(for='editSummary', size='30') Summary
+            textarea.form-control#editSummary(type="text", name="editSummary", placeholder='Enter summary', ng-model="addArticle.summary", style="margin: 0px; height: 204px; width: 569px; max-width: 100%; max-height: 150px;min-height: 150px;") 
+
+          .form-group
+            label(for='editDescription', size='30') Description
+            textarea.form-control#editDescription(type="text", name="editDescription", placeholder='Enter description', ng-model="addArticle.description", style="margin: 0px; height: 204px; width: 569px; max-width: 100%; max-height: 150px;min-height: 150px;") 
+
+          .form-group
+            label(for='editUrl') Link
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="addArticle.link", required) 
+          | &nbsp;
+
+          .form-group
+            label(for='editGuid') GUID
+            input.form-control#editUrl(type="text", name="editGuid", placeholder='Enter URL', size='60', ng-model="addArticle.guid", required) 
+          | &nbsp;
+
+          .form-group
+            label(for='editCat', size='30') Category 
+            ui-select(id='editCat',ng-model='addArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+              ui-select-choices(repeat='category in trimmedCategorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='category.name | highlight: $select.search')
+          .form-group
+            label(for='editLocation', size='30') Location 
+            ui-select(id='editLocation',ng-model='addArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
+              ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='location.name | highlight: $select.search')
+
+          .form-group
+            label(for='editTags', size='30') Tags 
+            //li(ng-repeat='f in files', style='font:smaller') {{f.name}}
+            ui-select(multiple='', ng-model='addArticle.tags', theme='bootstrap', ng-disabled='disabled', style='width: 100%;', name='editTags', id='editTags')
+              ui-select-match(placeholder='Select Tags...') {{$item.name}}
+              ui-select-choices(repeat='tag in trimmedTags | filter: $select.search')
+                div(ng-bind-html='tag.name | highlight: $select.search')
+
+          .form-group
+            label(for='editImage', size='30') Featured Image
+            br
+            img(src='{{getImage()}}', style='width:100px;height:100px;', name='editImage')
+            .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false', class='btn btn-primary')
+              i.glyphicon.glyphicon-upload
+              div Select Image
+
+          .form-group
+            label(for='editAuthor') Author
+            input.form-control#editAuthor(type="text", name="editAuthor", placeholder='Enter Author', size='60', ng-model="addArticle.author", required) 
+          | &nbsp;
+
+          .form-group
+            label(for='date') Date : {{addArticle.date}}
+            datetimepicker(name='date',show-weeks='false', hour-step='1', minute-step='1', ng-model='addArticle.date', show-meridian='false', date-format='dd-MMM-yyyy', readonly-time='false', date-options='dateOptions')
+
+
+
+
+
+
+
+                    
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='add()') Save
+
 #form-feed
   form.form-horizontal(role='form', name='searchForm')
     .form-group
@@ -94,7 +185,7 @@
           button.btn.btn-primary(type="button", ng-click='ensureReadAll()')
             i.glyphicon.glyphicon-folder-open
             |  Read all
-          button.btn-sm.btn.btn-primary(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modArticle")
+          button.btn-sm.btn.btn-primary(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modAddArticle")
             i.glyphicon.glyphicon-plus
             |  Add New Article
 p(ng-show='articles.length == 0') No such articles.

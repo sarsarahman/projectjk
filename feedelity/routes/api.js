@@ -304,6 +304,7 @@ exports.getArticle = function(req, res) {
 }
 
 exports.addArticle = function(req, res) {
+    console.log('aad');
     var article = req.body;
 
     if (req.body.tags.length > 0) {
@@ -322,8 +323,8 @@ exports.addArticle = function(req, res) {
 
 
     addArticle = new Article({
-        starred: req.body.starred,
-        read: req.body.read,
+        starred: false,
+        read: false,
         name: req.body.name,
         title: req.body.title,
         summary: req.body.summary,
@@ -639,7 +640,7 @@ exports.singleImageUpload = function(req, res) {
     // console.log(req.files.file)
     var tempPath = req.files.file.path,
         ext = path.extname(req.files.file.name).toLowerCase(),
-        newFileName = '/images/' + genarateUniqueHash() + ext;
+        newFileName = '/images/uploads/' + genarateUniqueHash() + ext;
     targetPath = path.resolve('./public' + newFileName);
     console.log(tempPath, ext, targetPath)
     if (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif') {

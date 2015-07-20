@@ -182,6 +182,8 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
         }).
         success(function(data, status, headers, config) {
             $scope.articles.push(data);
+            console.log($scope.addArticle)
+            $('#modAddArticle').modal('hide');
             $scope.addArticle = {};
         });
     }
