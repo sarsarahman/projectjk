@@ -313,11 +313,11 @@ exports.addArticle = function(req, res) {
         });
     };
 
-    if (req.body.category['_id']) {
+    if ('_id' in req.body.category) {
         categoryId = req.body.category._id;
     };
 
-    if (req.body.location['_id']) {
+    if ('_id' in req.body.location) {
         locationId = req.body.location._id;
     };
 
@@ -380,13 +380,14 @@ exports.updateArticle = function(req, res) {
         });
     };
 
-    if (req.body.category['_id']) {
+    if ('_id' in req.body.category) {
         categoryId = req.body.category._id;
     };
 
-    if (req.body.location['_id']) {
+    if ('_id' in req.body.location) {
         locationId = req.body.location._id;
     };
+
 
     console.log(tagIds);
 
