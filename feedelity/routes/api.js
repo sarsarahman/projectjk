@@ -380,13 +380,9 @@ exports.updateArticle = function(req, res) {
         });
     };
 
-    if (req.body.category.hasOwnProperty('_id')) {
         categoryId = req.body.category._id;
-    };
 
-    if (req.body.location.hasOwnProperty('_id')) {
         locationId = req.body.location._id;
-    };
 
     console.log(tagIds);
 
