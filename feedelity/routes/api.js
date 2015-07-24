@@ -313,12 +313,12 @@ exports.addArticle = function(req, res) {
         });
     };
 
-    if (req.body.category.hasOwnProperty('_id')) {
-        var categoryId = req.body.category._id;
+    if (req.body.category['_id']) {
+        categoryId = req.body.category._id;
     };
 
-    if (req.body.location.hasOwnProperty('_id')) {
-        var locationId = req.body.location._id;
+    if (req.body.location['_id']) {
+        locationId = req.body.location._id;
     };
 
 
@@ -380,9 +380,13 @@ exports.updateArticle = function(req, res) {
         });
     };
 
+    if (req.body.category['_id']) {
         categoryId = req.body.category._id;
+    };
 
+    if (req.body.location['_id']) {
         locationId = req.body.location._id;
+    };
 
     console.log(tagIds);
 
