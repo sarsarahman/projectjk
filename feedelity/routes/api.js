@@ -46,6 +46,14 @@ var feedSchema = mongoose.Schema({
     },
 });
 
+var userSchema = mongoose.Schema({
+    name: String,
+    url: String,
+    username: String,
+    email: String,
+    mobileNumber: String,
+});
+
 var articleSchema = mongoose.Schema({
     _feed: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -61,6 +69,8 @@ var articleSchema = mongoose.Schema({
     read: Boolean,
     starred: Boolean,
     imgUrl: String,
+    likes: Number,
+    dislikes: Number,
     tags: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Tag'
@@ -94,6 +104,7 @@ Article = mongoose.model('Article', articleSchema);
 Category = mongoose.model('Category', catSchema);
 Tag = mongoose.model('Tag', tagSchema);
 Local = mongoose.model('Location', locationSchema);
+User = mongoose.model('User', userSchema);
 
 // Feeds functions
 
@@ -313,12 +324,16 @@ exports.addArticle = function(req, res) {
         });
     };
 
-    if ('_id' in req.body.category) {
-        categoryId = req.body.category._id;
+    if (req.body.category) {
+        if ('_id' in req.body.category) {
+            categoryId = req.body.category._id;
+        };
     };
 
-    if ('_id' in req.body.location) {
-        locationId = req.body.location._id;
+    if (req.body.location) {
+        if ('_id' in req.body.location) {
+            locationId = req.body.location._id;
+        };
     };
 
 
@@ -380,12 +395,16 @@ exports.updateArticle = function(req, res) {
         });
     };
 
-    if ('_id' in req.body.category) {
-        categoryId = req.body.category._id;
+    if (req.body.category) {
+        if ('_id' in req.body.category) {
+            categoryId = req.body.category._id;
+        };
     };
 
-    if ('_id' in req.body.location) {
-        locationId = req.body.location._id;
+    if (req.body.location) {
+        if ('_id' in req.body.location) {
+            locationId = req.body.location._id;
+        };
     };
 
 
