@@ -31,9 +31,15 @@
 table.table.table-striped.table-bordered.table-hover
   thead
     tr
-      th #
+      th User ID
+      th Display Picture
       th Name
-      th Boot Value
+      th Email
+      th Mobile No
+      th Location
+      th User Likes
+      th Likes
+      th Dislikes
       th Actions
   tbody
     tr(ng-repeat='tag in tags | filter:searchText')

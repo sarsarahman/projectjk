@@ -7,7 +7,18 @@ var request = require('request'),
     conf = require('../config.json'),
     fs = require('fs'),
     crypto = require('crypto'),
-    path = require('path');
+    http = require('http'),
+    https = require('https'),
+    expressSession = require('express-session');
+
+
+
+
+
+
+
+
+
 
 
 var genarateUniqueHash = function() {
@@ -47,11 +58,33 @@ var feedSchema = mongoose.Schema({
 });
 
 var userSchema = mongoose.Schema({
-    name: String,
+    fbid: String,
+    firstName: String,
+    lastName: String,
     url: String,
     username: String,
+    password: String,
     email: String,
+    gender: String,
+    relationshipStatus: String,
+    birthday: Date,
     mobileNumber: String,
+    location: String,
+    userFbLikes: [String],
+    dp: String,
+    status: Boolean
+});
+
+var adminUserSchema = mongoose.Schema({
+    name: String,
+    username: String,
+    password: String,
+    email: String,
+    gender: String,
+    mobileNumber: String,
+    location: String,
+    dp: String,
+    status: Boolean
 });
 
 var articleSchema = mongoose.Schema({
@@ -99,12 +132,439 @@ var locationSchema = mongoose.Schema({
     name: String
 });
 
+var likeSchema = mongoose.Schema({
+    article: String,
+    username: String,
+    status: Boolean
+});
+
+var bookmarkSchema = mongoose.Schema({
+    article: String,
+    username: String,
+    status: Boolean
+});
+
+
+
+
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
 Category = mongoose.model('Category', catSchema);
 Tag = mongoose.model('Tag', tagSchema);
 Local = mongoose.model('Location', locationSchema);
 User = mongoose.model('User', userSchema);
+AdminUser = mongoose.model('AdminUser', adminUserSchema);
+Like = mongoose.model('Like', likeSchema);
+Bookmark = mongoose.model('Bookmark', bookmarkSchema);
+
+
+// Login and Signup functions
+
+exports.testUserLogin = function(req, res) {
+
+    console.log(req.body)
+
+    var YOUR_APP_ID = '110406559309977',
+        YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
+        grant_type = 'client_credentials',
+        INPUT_TOKEN = req.body.access_token,
+        ACCESS_TOKEN = '',
+        debugResponse = '',
+        userData = req.body;
+
+
+    https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
+        fb_1_res.on("data", function(chunk) {
+            var textChunk = chunk + '';
+            if (textChunk.indexOf("access_token=") > -1) {
+                ACCESS_TOKEN = textChunk.split("access_token=")[1]
+                https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
+                    fb_2_res.on("data", function(chunk) {
+                        debugResponse = JSON.parse(chunk + '');
+
+                        if (debugResponse.data) {
+                            // console.log(debugResponse);
+                            // console.log(req.body);
+
+
+                            if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
+
+                                res.status(200).send({
+                                    debugResponse: debugResponse,
+                                    userData: userData
+                                });
+
+                            } else {
+
+                                res.status(200).send({
+                                    error: 'invalid_details'
+                                });
+                            };
+
+                        } else {
+                            res.status(200).send({
+                                debugResponse: debugResponse
+                            });
+                        };
+
+                    });
+                });
+            }
+        });
+
+
+
+    }).on('error', function(e) {
+        console.log("Got error: " + e.message);
+    });
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+exports.userLogin = function(userData, callback) {
+
+
+    // var addUser = new User({
+    //     fbid: userData.id,
+    //     firstName: userData.first_name,
+    //     lastName: userData.last_name,
+    //     url: userData.url,
+    //     username: userData.username,
+    //     access_token: userData.access_token,
+    //     email: userData.email,
+    //     gender: userData.gender,
+    //     relationshipStatus: userData.relationshipStatus,
+    //     birthday: new Date(userData.birthday),
+    //     mobileNumber: userData.mobileNumber,
+    //     location: userData.location,
+    //     userFbLikes: [userData.userFbLikes],
+    //     dp: userData.dp,
+    //     status: true
+    // });
+    // User.create(addUser).then(function(addUser) {
+    //     console.log('New User Created :', addUser);
+    //     // callback(addUser);
+    // });
+
+
+
+
+
+
+    User.findOne({
+        email: userData.email
+    }, function(err, user) {
+        if (!!user) {
+
+            User.findOneAndUpdate({
+                email: user.email
+            }, {
+                access_token: userData.access_token
+            }, {
+                upsert: true
+            }).exec().then(function(updatedUser) {
+
+                callback(updatedUser);
+            });
+
+        } else {
+
+            // console.log('inside err');
+            signupForUser(userData, callback);
+
+        };
+    });
+
+    // return result;
+}
+
+
+
+
+function signupForUser(userData, callback) {
+
+    addUser = new User({
+        fbid: userData.id,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        url: userData.url,
+        username: userData.username,
+        access_token: userData.access_token,
+        email: userData.email,
+        gender: userData.gender,
+        relationshipStatus: userData.relationshipStatus,
+        birthday: new Date(userData.birthday),
+        mobileNumber: userData.mobileNumber,
+        location: userData.location,
+        userFbLikes: [userData.userFbLikes],
+        dp: userData.dp,
+        status: true
+    });
+    User.create(addUser).then(function(addUser) {
+        console.log('New User Created :', addUser);
+        callback(addUser);
+    });
+
+
+
+}
+
+
+
+exports.adminLogin = function(userData) {
+
+    AdminUser.findOne({
+        email: userData.email
+    }).exec().then(function(err, like) {
+        if (err) {
+            // Call Signup
+            // loginForAdmin(userData);
+            return ''
+        } else {
+            // Call Login
+            // signupForAdmin(userData)
+            return like.status;
+        };
+    });
+}
+
+
+function loginForAdmin(userData) {
+
+}
+
+
+// function signupForAdmin(userData) {
+
+// }
+
+
+
+
+
+
+//Like and Dislike functions
+
+exports.likeArticle = function(req, res) {
+
+    var current_username = '';
+    var current_article = '';
+
+    Like.find({
+        username: current_username,
+        article: current_article
+    }).exec().then(function(like) {
+        res.status(200).send();
+    });
+
+
+    var query = {
+        username: current_username,
+        article: current_article
+    };
+
+    var update = {
+        username: current_username,
+        article: current_article,
+        status: false
+    }
+
+    var options = {
+        upsert: true
+    };
+
+    Like.findOneAndUpdate(query, update, options).exec().then(function(like) {
+        res.status(200).send(like);
+    });
+
+
+
+}
+
+exports.dislikeArticle = function(req, res) {
+
+    var current_username = '';
+    var current_article = '';
+
+    var query = {
+        username: current_username,
+        article: current_article
+    };
+
+    var update = {
+        username: current_username,
+        article: current_article,
+        status: false
+    }
+
+    var options = {
+        upsert: true
+    };
+
+    Like.findOneAndUpdate(query, update, options).exec().then(function(like) {
+        res.status(200).send(like);
+    });
+
+}
+
+
+function hasLiked(current_article, current_username) {
+
+    Like.findOne({
+        username: current_username,
+        article: current_article
+    }).exec().then(function(err, like) {
+        if (err) {
+            return ''
+        } else {
+            return like.status;
+        };
+    });
+
+}
+
+
+function likedArticles(current_article, current_username, status) {
+    Like.find({
+        username: current_username,
+        article: current_article,
+        status: like_status
+    }).exec().then(function(err, likes) {
+        if (err) {
+            return ''
+        } else {
+            return likes;
+        };
+    });
+
+}
+
+
+
+function articleLikesCount(current_article, current_username, like_status) {
+
+    Like.find({
+        username: current_username,
+        article: current_article,
+        status: like_status
+    }).exec().then(function(err, likes) {
+        if (err) {
+            return 0
+        } else {
+            return likes.length;
+        };
+    });
+
+}
+
+
+
+
+
+
+
+
+
+//Bookmark functions
+
+exports.bookmarkArticle = function(req, res) {
+
+
+    var current_username = '';
+    var current_article = '';
+
+
+
+    var query = {
+        username: current_username,
+        article: current_article
+    };
+
+    var update = {
+        username: current_username,
+        article: current_article,
+        status: false
+    }
+
+    Bookmark.findOne(query).exec().then(function(err, bookmark) {
+        if (err) {
+            update = {
+                username: current_username,
+                article: current_article,
+                status: true
+            }
+        } else {
+            update = {
+                username: current_username,
+                article: current_article,
+                status: !bookmark.status
+            }
+        };
+    });
+
+
+
+
+    var options = {
+        upsert: true
+    };
+
+    Bookmark.findOneAndUpdate(query, update, options).exec().then(function(bookmark) {
+        res.status(200).send(bookmark);
+    });
+
+}
+
+
+function hasBookmarked(current_article, current_username) {
+
+
+    Bookmark.findOne({
+        username: current_username,
+        article: current_article
+    }).exec().then(function(err, bookmark) {
+        if (err) {
+            return false
+        } else {
+            return bookmark.status;
+        };
+    });
+
+}
+
+
+function bookmarkedArticles(current_article, current_username, status) {
+
+    Bookmark.find({
+        username: current_username,
+        article: current_article,
+        status: like_status
+    }).exec().then(function(err, bookmarks) {
+        if (err) {
+            return ''
+        } else {
+            return bookmarks;
+        };
+    });
+
+}
+
+
+
+
+
+
 
 // Feeds functions
 
@@ -383,7 +843,7 @@ exports.updateArticle = function(req, res) {
     var locationId = '';
     var tagIds = [];
 
-    console.log(req.body)
+    // console.log(req.body)
 
     var query = {
         _id: req.body._id
@@ -398,17 +858,21 @@ exports.updateArticle = function(req, res) {
     if (req.body.category) {
         if ('_id' in req.body.category) {
             categoryId = req.body.category._id;
+        } else {
+            categoryId = '';
         };
     };
 
     if (req.body.location) {
         if ('_id' in req.body.location) {
             locationId = req.body.location._id;
+        } else {
+            locationId = '';
         };
     };
 
 
-    console.log(tagIds);
+    // console.log(tagIds);
 
     var update = {
         starred: req.body.starred,
@@ -427,6 +891,7 @@ exports.updateArticle = function(req, res) {
         guid: req.body.guid,
     }
     Article.findOneAndUpdate(query, update).exec().then(function(article) {
+        // console.log(article,update); 
         res.status(200).send(article);
     });
 }

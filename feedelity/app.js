@@ -6,7 +6,101 @@ var express = require('express'),
     routes = require('./routes'),
     api = require('./routes/api'),
     http = require('http'),
-    path = require('path');
+    https = require('https'),
+    path = require('path'),
+    cookieParser = require('cookie-parser'),
+    session = require('express-session'),
+    passport = require('passport'),
+    flash = require('connect-flash'),
+    LocalStrategy = require('passport-local').Strategy;
+
+
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+    done(null, user);
+});
+
+passport.use('userlogin', new LocalStrategy({
+        usernameField: 'email',
+        passwordField: 'access_token',
+        passReqToCallback: true
+    },
+    function(req, username, password, done) {
+
+
+        var YOUR_APP_ID = '110406559309977',
+            YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
+            grant_type = 'client_credentials',
+            INPUT_TOKEN = req.body.access_token,
+            ACCESS_TOKEN = '',
+            debugResponse = '',
+            userData = req.body;
+
+
+        https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
+            fb_1_res.on("data", function(chunk) {
+                var textChunk = chunk + '';
+                if (textChunk.indexOf("access_token=") > -1) {
+                    ACCESS_TOKEN = textChunk.split("access_token=")[1]
+                    https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
+                        fb_2_res.on("data", function(chunk) {
+                            debugResponse = JSON.parse(chunk + '');
+
+                            if (debugResponse.data) {
+                                // console.log(debugResponse);
+                                // console.log(req.body);
+                                if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
+
+                                    var resUserData = api.userLogin(userData, function(user) {
+                                        // console.log(user, 'test');
+                                        // return user;
+
+                                        return done(null, {
+                                            debugResponse: debugResponse,
+                                            userData: user
+                                        });
+                                    });
+
+
+                                    // res.status(200).send({
+                                    //     debugResponse: debugResponse,
+                                    //     userData: userData
+                                    // });
+
+                                } else {
+                                    return done(null, false, {
+                                        debugResponse: debugResponse,
+                                        error: 'invalid_details'
+                                    });
+                                };
+                            } else {
+                                return done(null, false, {
+                                    debugResponse: debugResponse,
+                                    error: 'invalid_details'
+
+                                });
+                            };
+                        });
+                    });
+                }
+            });
+
+
+
+        }).on('error', function(e) {
+            console.log("Got error: " + e.message);
+        });
+
+
+
+
+    }));
+
+
+
 
 var app = module.exports = express();
 
@@ -15,14 +109,64 @@ var app = module.exports = express();
  */
 
 // all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(app.router);
+app.configure(function() {
+    app.set('port', process.env.PORT || 3000);
+    app.set('views', __dirname + '/views');
+    app.set('view engine', 'jade');
+    app.use(express.logger('dev'));
+    app.use(cookieParser());
+    app.use(express.bodyParser());
+    app.use(express.methodOverride());
+
+
+
+    //Passport config
+    app.use(express.session({
+        secret: 'keyboard cat'
+    }));
+    app.use(flash());
+    app.use(passport.initialize());
+    app.use(passport.session());
+    app.use(app.router);
+    app.use(express.static(path.join(__dirname, 'public')));
+
+});
+
+
+
+
+
+// passport.use('adminlogin', new LocalStrategy({
+//         passReqToCallback: true
+//     },
+//     function(req, username, password, done) {
+//         // check in mongo if a user with username exists or not
+//         User.findOne({
+//                 'username': username
+//             },
+//             function(err, user) {
+//                 // In case of any error, return using the done method
+//                 if (err)
+//                     return done(err);
+//                 // Username does not exist, log error & redirect back
+//                 if (!user) {
+//                     console.log('User Not Found with username ' + username);
+//                     return done(null, false,
+//                         req.flash('message', 'User Not found.'));
+//                 }
+//                 // User exists but wrong password, log the error 
+//                 if (!isValidPassword(user, password)) {
+//                     console.log('Invalid Password');
+//                     return done(null, false,
+//                         req.flash('message', 'Invalid Password'));
+//                 }
+//                 // User and password both match, return user from 
+//                 // done method which will be treated like success
+//                 return done(null, user);
+//             }
+//         );
+//     }));
+
 
 // development only
 if (app.get('env') === 'development') {
@@ -37,6 +181,18 @@ if (app.get('env') === 'production') {
 // Routes
 app.get('/', routes.index);
 app.get('/partial/:name', routes.partial);
+
+
+
+
+// Login
+app.post('/api/login',
+    passport.authenticate('userlogin'),
+    function(req, res) {
+        console.log(req.user);
+        res.status(200).send(req.user);
+        
+    });
 
 // JSON API
 app.get('/api/refresh', api.refreshFeeds);
