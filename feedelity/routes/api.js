@@ -440,7 +440,7 @@ exports.bookmarkArticle = function(req, res) {
             };
 
             update = {
-                articles: bookmark.articles;
+                articles: bookmark.articles
             }
 
         } else {
