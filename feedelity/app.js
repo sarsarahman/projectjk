@@ -101,6 +101,17 @@ passport.use('userlogin', new LocalStrategy({
 
 
 
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.json({
+        error: "Not Authenticated!!!"
+    });
+}
+
+
+
 
 var app = module.exports = express();
 
@@ -119,6 +130,8 @@ app.configure(function() {
     app.use(express.methodOverride());
 
 
+    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(app.router);
 
     //Passport config
     app.use(express.session({
@@ -127,8 +140,6 @@ app.configure(function() {
     app.use(flash());
     app.use(passport.initialize());
     app.use(passport.session());
-    app.use(app.router);
-    app.use(express.static(path.join(__dirname, 'public')));
 
 });
 
@@ -191,8 +202,25 @@ app.post('/api/login',
     function(req, res) {
         console.log(req.user);
         res.status(200).send(req.user);
-        
+
     });
+// Mobile App API
+app.get('/api/userarticles/:cat',
+    // ensureAuthenticated, 
+    api.getCategoryArticles);
+
+app.get('/api/like/:id', api.likeArticle);
+app.get('/api/dislike/:id', api.dislikeArticle);
+app.get('/api/bookmark/:id', api.bookmarkArticle);
+
+
+app.get('/api/liked', api.likedArticles);
+app.get('/api/disliked', api.dislikedArticles);
+app.get('/api/bookmarked', api.bookmarkedArticles);
+
+
+
+
 
 // JSON API
 app.get('/api/refresh', api.refreshFeeds);

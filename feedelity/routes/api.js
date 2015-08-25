@@ -133,15 +133,28 @@ var locationSchema = mongoose.Schema({
 });
 
 var likeSchema = mongoose.Schema({
-    article: String,
-    username: String,
-    status: Boolean
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    likes: [{
+        article: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Article'
+        },
+        status: Boolean
+    }]
 });
 
 var bookmarkSchema = mongoose.Schema({
-    article: String,
-    username: String,
-    status: Boolean
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    articles: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Article'
+    }]
 });
 
 
@@ -234,67 +247,7 @@ exports.testUserLogin = function(req, res) {
 
 exports.userLogin = function(userData, callback) {
 
-
-    // var addUser = new User({
-    //     fbid: userData.id,
-    //     firstName: userData.first_name,
-    //     lastName: userData.last_name,
-    //     url: userData.url,
-    //     username: userData.username,
-    //     access_token: userData.access_token,
-    //     email: userData.email,
-    //     gender: userData.gender,
-    //     relationshipStatus: userData.relationshipStatus,
-    //     birthday: new Date(userData.birthday),
-    //     mobileNumber: userData.mobileNumber,
-    //     location: userData.location,
-    //     userFbLikes: [userData.userFbLikes],
-    //     dp: userData.dp,
-    //     status: true
-    // });
-    // User.create(addUser).then(function(addUser) {
-    //     console.log('New User Created :', addUser);
-    //     // callback(addUser);
-    // });
-
-
-
-
-
-
-    User.findOne({
-        email: userData.email
-    }, function(err, user) {
-        if (!!user) {
-
-            User.findOneAndUpdate({
-                email: user.email
-            }, {
-                access_token: userData.access_token
-            }, {
-                upsert: true
-            }).exec().then(function(updatedUser) {
-
-                callback(updatedUser);
-            });
-
-        } else {
-
-            // console.log('inside err');
-            signupForUser(userData, callback);
-
-        };
-    });
-
-    // return result;
-}
-
-
-
-
-function signupForUser(userData, callback) {
-
-    addUser = new User({
+    var update = {
         fbid: userData.id,
         firstName: userData.first_name,
         lastName: userData.last_name,
@@ -310,15 +263,20 @@ function signupForUser(userData, callback) {
         userFbLikes: [userData.userFbLikes],
         dp: userData.dp,
         status: true
-    });
-    User.create(addUser).then(function(addUser) {
-        console.log('New User Created :', addUser);
-        callback(addUser);
-    });
+    };
 
 
+    User.findOneAndUpdate({
+        email: user.email
+    }, update, {
+        upsert: true
+    }).exec().then(function(user) {
+        callback(user);
+    });
 
 }
+
+
 
 
 
@@ -358,115 +316,98 @@ function loginForAdmin(userData) {
 
 exports.likeArticle = function(req, res) {
 
-    var current_username = '';
-    var current_article = '';
+    var current_username = req.user._id;
+    var current_article = req.params.id;
 
-    Like.find({
-        username: current_username,
-        article: current_article
-    }).exec().then(function(like) {
-        res.status(200).send();
+    Article.findOneAndUpdate({
+        _id: current_article
+    }, {
+        $inc: {
+            likes: 1
+        }
+    }).exec().then(function(article) {
+        Like.findOneAndUpdate({
+            user: current_username,
+            'user.likes.article': current_article
+        }, {
+            'user.likes.status': true
+        }, {
+            upsert: true
+        }).exec().then(function(like) {
+            res.status(200).send(article);
+        });
     });
-
-
-    var query = {
-        username: current_username,
-        article: current_article
-    };
-
-    var update = {
-        username: current_username,
-        article: current_article,
-        status: false
-    }
-
-    var options = {
-        upsert: true
-    };
-
-    Like.findOneAndUpdate(query, update, options).exec().then(function(like) {
-        res.status(200).send(like);
-    });
-
-
-
 }
 
 exports.dislikeArticle = function(req, res) {
 
-    var current_username = '';
-    var current_article = '';
+    var current_username = req.user._id;
+    var current_article = req.params.id;
 
-    var query = {
-        username: current_username,
-        article: current_article
-    };
-
-    var update = {
-        username: current_username,
-        article: current_article,
-        status: false
-    }
-
-    var options = {
-        upsert: true
-    };
-
-    Like.findOneAndUpdate(query, update, options).exec().then(function(like) {
-        res.status(200).send(like);
-    });
-
-}
-
-
-function hasLiked(current_article, current_username) {
-
-    Like.findOne({
-        username: current_username,
-        article: current_article
-    }).exec().then(function(err, like) {
-        if (err) {
-            return ''
-        } else {
-            return like.status;
-        };
-    });
-
-}
-
-
-function likedArticles(current_article, current_username, status) {
-    Like.find({
-        username: current_username,
-        article: current_article,
-        status: like_status
-    }).exec().then(function(err, likes) {
-        if (err) {
-            return ''
-        } else {
-            return likes;
-        };
+    Article.findOneAndUpdate({
+        _id: current_article
+    }, {
+        $inc: {
+            dislikes: 1
+        }
+    }).exec().then(function(article) {
+        Like.findOneAndUpdate({
+            user: current_username,
+            'user.likes.article': current_article
+        }, {
+            'user.likes.status': false
+        }, {
+            upsert: true
+        }).exec().then(function(like) {
+            res.status(200).send(article);
+        });
     });
 
 }
 
 
 
-function articleLikesCount(current_article, current_username, like_status) {
+
+exports.likedArticles = function(req, res) {
+
+    var current_username = req.user._id;
 
     Like.find({
-        username: current_username,
-        article: current_article,
-        status: like_status
-    }).exec().then(function(err, likes) {
+        user: current_username,
+        'user.likes.status': true
+    }).populate('article', 'name').exec().then(function(err, likes) {
         if (err) {
-            return 0
+            res.status(200).send({
+                error: 'error'
+            })
         } else {
-            return likes.length;
+            res.status(200).send(likes);
         };
     });
 
 }
+
+
+exports.dislikedArticles = function(req, res) {
+
+    var current_username = req.user._id;
+
+    Like.find({
+        user: current_username,
+        'user.likes.status': true
+    }).populate('article', 'name').exec().then(function(err, likes) {
+        if (err) {
+            res.status(200).send({
+                error: 'error'
+            })
+        } else {
+            res.status(200).send(likes);
+        };
+    });
+
+}
+
+
 
 
 
@@ -479,85 +420,62 @@ function articleLikesCount(current_article, current_username, like_status) {
 //Bookmark functions
 
 exports.bookmarkArticle = function(req, res) {
-
-
-    var current_username = '';
-    var current_article = '';
-
-
+    var current_username = req.user._id;
+    var current_article = req.params.id;
 
     var query = {
         username: current_username,
-        article: current_article
     };
 
-    var update = {
-        username: current_username,
-        article: current_article,
-        status: false
-    }
+    var update = {};
 
     Bookmark.findOne(query).exec().then(function(err, bookmark) {
-        if (err) {
+        if (!!bookmark) {
+
+            var pos = bookmark.articles.indexOf(current_article);
+            if (pos > -1) {
+                bookmark.articles.splice(pos, 1);
+            } else {
+                bookmark.articles.push(current_article);
+            };
+
             update = {
-                username: current_username,
-                article: current_article,
-                status: true
+                articles: bookmark.articles;
             }
+
         } else {
             update = {
-                username: current_username,
-                article: current_article,
-                status: !bookmark.status
+                articles: [current_article]
             }
+
         };
+
+        var options = {
+            upsert: true
+        };
+
+        Bookmark.findOneAndUpdate(query, update, options).exec().then(function(updated_bookmark) {
+            res.status(200).send(updated_bookmark);
+        });
     });
-
-
-
-
-    var options = {
-        upsert: true
-    };
-
-    Bookmark.findOneAndUpdate(query, update, options).exec().then(function(bookmark) {
-        res.status(200).send(bookmark);
-    });
-
 }
 
 
-function hasBookmarked(current_article, current_username) {
 
 
-    Bookmark.findOne({
-        username: current_username,
-        article: current_article
-    }).exec().then(function(err, bookmark) {
-        if (err) {
-            return false
-        } else {
-            return bookmark.status;
-        };
-    });
 
-}
-
-
-function bookmarkedArticles(current_article, current_username, status) {
-
+exports.bookmarkedArticles = function(req, res) {
     Bookmark.find({
-        username: current_username,
-        article: current_article,
-        status: like_status
-    }).exec().then(function(err, bookmarks) {
+        username: req.user._id,
+    }).populate('articles', 'name').exec().then(function(err, bookmarks) {
         if (err) {
-            return ''
+            res.json({
+                error: 'error'
+            })
         } else {
-            return bookmarks;
+            res.json(bookmarks)
         };
     });
-
 }
 
 
@@ -725,7 +643,9 @@ function refreshFeed(feed, callBack) {
                     lastFetchedNb: newArticles.length,
                     lastErrorNb: errors,
                     lastOutdatedNb: outdated,
-                    state: state
+                    state: state,
+                    likes: 0,
+                    dislikes: 0
                 };
                 Feed.findOneAndUpdate({
                     _id: feed._id
@@ -812,6 +732,8 @@ exports.addArticle = function(req, res) {
         author: req.body.author,
         link: req.body.link,
         guid: req.body.guid,
+        likes: 0,
+        dislikes: 0
     });
     Article.create(addArticle).then(function(addArticle) {
         res.status(200).send(addArticle);
@@ -957,6 +879,90 @@ function extractArticle(item, feed) {
         starred: false
     });
 }
+
+
+
+
+
+exports.getCategoryArticles = function(req, res) {
+
+    console.log('catarticles');
+    var reqCategory = req.params.cat;
+    // var category = '';
+
+    Category.findOne({
+        name: reqCategory
+    }, function(err, cat) {
+        console.log(cat);
+        if (!!cat) {
+            Article.find({
+                read: true,
+                category: cat._id
+            }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
+
+                articles.sort(compareArticles);
+
+                Bookmark.findOne({
+                    username: req.user._id,
+                }).exec().then(function(err, bookmarks) {
+                    if (!!bookmarks) {
+                        // callback(bookmark.status);
+
+                        for (var i = 0; i < articles.length; i++) {
+                            if (bookmarks.indexOf(articles[i]._id) > -1 == true) {
+                                articles[i].bookmark = true;
+                            } else {
+                                articles[i].bookmark = false;
+                            };
+                        };
+
+                    } else {
+                        for (var i = 0; i < articles.length; i++) {
+                            articles[i].bookmark = false;
+                        };
+                    };
+
+                    Like.findOne({
+                        username: req.user._id,
+                    }).exec().then(function(err, likes) {
+                        if (!!likes) {
+                            for (var i = 0; i < articles.length; i++) {
+                                for (var j = 0; j < likes.length; j++) {
+                                    if (likes[j].article == articles[i]._id) {
+                                        articles[i].like = likes[j].status;
+                                    };
+                                };
+                            };
+                        }
+                        res.json(articles);
+                    });
+                });
+            });
+        } else {
+            res.json({
+                error: "No articles found!!!"
+            });
+        }
+    });
+}
+
+
+
+// function hasBookmarked(current_article, current_username, callback) {
+
+
+//     Bookmark.findOne({
+//         username: current_username,
+//         article: current_article
+//     }).exec().then(function(err, bookmark) {
+//         if (!!bookmark) {
+//             callback(bookmark.status);
+//         } else {
+//             callback(false);
+//         };
+//     });
+
+// }
 
 
 
