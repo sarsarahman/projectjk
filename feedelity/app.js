@@ -206,7 +206,7 @@ app.post('/api/login',
     });
 // Mobile App API
 app.get('/api/userarticles/:cat',
-    // ensureAuthenticated, 
+    ensureAuthenticated, 
     api.getCategoryArticles);
 
 app.get('/api/like/:id', api.likeArticle);
