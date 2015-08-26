@@ -58,12 +58,12 @@ var feedSchema = mongoose.Schema({
 });
 
 var userSchema = mongoose.Schema({
-    fbid: String,
+    id: String,
     firstName: String,
     lastName: String,
     url: String,
     username: String,
-    password: String,
+    access_token: String,
     email: String,
     gender: String,
     relationshipStatus: String,
@@ -173,65 +173,63 @@ Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 
 // Login and Signup functions
 
-exports.testUserLogin = function(req, res) {
+// exports.testUserLogin = function(req, res) {
 
-    console.log(req.body)
+//     console.log(req.body)
 
-    var YOUR_APP_ID = '110406559309977',
-        YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
-        grant_type = 'client_credentials',
-        INPUT_TOKEN = req.body.access_token,
-        ACCESS_TOKEN = '',
-        debugResponse = '',
-        userData = req.body;
-
-
-    https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
-        fb_1_res.on("data", function(chunk) {
-            var textChunk = chunk + '';
-            if (textChunk.indexOf("access_token=") > -1) {
-                ACCESS_TOKEN = textChunk.split("access_token=")[1]
-                https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
-                    fb_2_res.on("data", function(chunk) {
-                        debugResponse = JSON.parse(chunk + '');
-
-                        if (debugResponse.data) {
-                            // console.log(debugResponse);
-                            // console.log(req.body);
+//     var YOUR_APP_ID = '110406559309977',
+//         YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
+//         grant_type = 'client_credentials',
+//         INPUT_TOKEN = req.body.access_token,
+//         ACCESS_TOKEN = '',
+//         debugResponse = '',
+//         userData = req.body;
 
 
-                            if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
+//     https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
+//         fb_1_res.on("data", function(chunk) {
+//             var textChunk = chunk + '';
+//             if (textChunk.indexOf("access_token=") > -1) {
+//                 ACCESS_TOKEN = textChunk.split("access_token=")[1]
+//                 https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
+//                     fb_2_res.on("data", function(chunk) {
+//                         debugResponse = JSON.parse(chunk + '');
 
-                                res.status(200).send({
-                                    debugResponse: debugResponse,
-                                    userData: userData
-                                });
-
-                            } else {
-
-                                res.status(200).send({
-                                    error: 'invalid_details'
-                                });
-                            };
-
-                        } else {
-                            res.status(200).send({
-                                debugResponse: debugResponse
-                            });
-                        };
-
-                    });
-                });
-            }
-        });
+//                         if (debugResponse.data) {
+//                             // console.log(debugResponse);
+//                             // console.log(req.body);
 
 
+//                             if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
 
-    }).on('error', function(e) {
-        console.log("Got error: " + e.message);
-    });
+//                                 res.status(200).send({
+//                                     debugResponse: debugResponse,
+//                                     userData: userData
+//                                 });
+
+//                             } else {
+
+//                                 res.status(200).send({
+//                                     error: 'invalid_details'
+//                                 });
+//                             };
+
+//                         } else {
+//                             res.status(200).send({
+//                                 debugResponse: debugResponse
+//                             });
+//                         };
+
+//                     });
+//                 });
+//             }
+//         });
 
 
+
+//     }).on('error', function(e) {
+//         console.log("Got error: " + e.message);
+//     });
 
 
 
@@ -239,7 +237,9 @@ exports.testUserLogin = function(req, res) {
 
 
 
-}
+
+
+// }
 
 
 
@@ -247,27 +247,28 @@ exports.testUserLogin = function(req, res) {
 
 exports.userLogin = function(userData, callback) {
 
+
     var update = {
-        fbid: userData.id,
+        id: userData.id,
         firstName: userData.first_name,
         lastName: userData.last_name,
-        url: userData.url,
-        username: userData.username,
+        // url: userData.url,
+        // username: userData.username,
         access_token: userData.access_token,
         email: userData.email,
-        gender: userData.gender,
-        relationshipStatus: userData.relationshipStatus,
-        birthday: new Date(userData.birthday),
-        mobileNumber: userData.mobileNumber,
-        location: userData.location,
-        userFbLikes: [userData.userFbLikes],
-        dp: userData.dp,
+        // gender: userData.gender,
+        // relationshipStatus: userData.relationshipStatus,
+        // birthday: new Date(userData.birthday),
+        // mobileNumber: userData.mobileNumber,
+        // location: userData.location,
+        // userFbLikes: [userData.userFbLikes],
+        // dp: userData.dp,
         status: true
     };
 
 
     User.findOneAndUpdate({
-        email: user.email
+        email: userData.email
     }, update, {
         upsert: true
     }).exec().then(function(user) {

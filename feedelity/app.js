@@ -31,68 +31,62 @@ passport.use('userlogin', new LocalStrategy({
     function(req, username, password, done) {
 
 
+
         var YOUR_APP_ID = '110406559309977',
             YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
             grant_type = 'client_credentials',
             INPUT_TOKEN = req.body.access_token,
-            ACCESS_TOKEN = '',
+            ACCESS_TOKEN = '110406559309977|p0yNFQU5M_GtxAyak3TCWBdGqWY',
             debugResponse = '',
             userData = req.body;
 
 
-        https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
-            fb_1_res.on("data", function(chunk) {
-                var textChunk = chunk + '';
-                if (textChunk.indexOf("access_token=") > -1) {
-                    ACCESS_TOKEN = textChunk.split("access_token=")[1]
-                    https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
-                        fb_2_res.on("data", function(chunk) {
-                            debugResponse = JSON.parse(chunk + '');
 
-                            if (debugResponse.data) {
-                                // console.log(debugResponse);
-                                // console.log(req.body);
-                                if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
+        https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
+            fb_2_res.on("data", function(chunk) {
 
-                                    var resUserData = api.userLogin(userData, function(user) {
-                                        // console.log(user, 'test');
-                                        // return user;
-
-                                        return done(null, {
-                                            debugResponse: debugResponse,
-                                            userData: user
-                                        });
-                                    });
-
-
-                                    // res.status(200).send({
-                                    //     debugResponse: debugResponse,
-                                    //     userData: userData
-                                    // });
-
-                                } else {
-                                    return done(null, false, {
-                                        debugResponse: debugResponse,
-                                        error: 'invalid_details'
-                                    });
-                                };
-                            } else {
-                                return done(null, false, {
-                                    debugResponse: debugResponse,
-                                    error: 'invalid_details'
-
-                                });
-                            };
-                        });
-                    });
+                try {
+                    debugResponse = JSON.parse(chunk + '');
+                } catch (err) {
+                    debugResponse = {
+                        error: 'error'
+                    }
                 }
+
+                if (debugResponse.data) {
+
+                    if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
+
+                        var resUserData = api.userLogin(userData, function(user) {
+                            console.log(user)
+
+                            return done(null, {
+                                debugResponse: debugResponse,
+                                userData: user
+                            });
+                        });
+
+                    } else {
+                        return done(null, false, {
+                            debugResponse: debugResponse,
+                            error: 'invalid_details'
+                        });
+                    };
+                } else {
+                    return done(null, false, {
+                        debugResponse: debugResponse,
+                        error: 'invalid_details'
+
+                    });
+                };
             });
-
-
-
-        }).on('error', function(e) {
-            console.log("Got error: " + e.message);
         });
+
+
+
+
+
+
 
 
 
@@ -131,7 +125,6 @@ app.configure(function() {
 
 
     app.use(express.static(path.join(__dirname, 'public')));
-    app.use(app.router);
 
     //Passport config
     app.use(express.session({
@@ -140,6 +133,7 @@ app.configure(function() {
     app.use(flash());
     app.use(passport.initialize());
     app.use(passport.session());
+    app.use(app.router);
 
 });
 
@@ -206,7 +200,7 @@ app.post('/api/login',
     });
 // Mobile App API
 app.get('/api/userarticles/:cat',
-    ensureAuthenticated, 
+    // ensureAuthenticated, 
     api.getCategoryArticles);
 
 app.get('/api/like/:id', api.likeArticle);
