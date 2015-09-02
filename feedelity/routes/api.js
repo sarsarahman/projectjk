@@ -317,7 +317,9 @@ function loginForAdmin(userData) {
 
 exports.likeArticle = function(req, res) {
 
-    var current_username = req.user._id;
+    console.log('inside like')
+
+    var current_username = req.user.userData._id;
     var current_article = req.params.id;
 
     Article.findOneAndUpdate({
@@ -327,40 +329,190 @@ exports.likeArticle = function(req, res) {
             likes: 1
         }
     }).exec().then(function(article) {
-        Like.findOneAndUpdate({
+
+
+        Like.findOne({
             user: current_username,
-            'user.likes.article': current_article
-        }, {
-            'user.likes.status': true
-        }, {
-            upsert: true
-        }).exec().then(function(like) {
-            res.status(200).send(article);
+        }).lean().exec().then(function(like) {
+
+            if (!!like) {
+
+
+                if (like.likes.length < 1) {
+
+                    console.log('testsw', like);
+                    like.likes.push({
+                        article: current_article,
+                        status: true
+                    });
+                } else {
+                    console.log('testsw2', like);
+                    var likes = like.likes;
+                    console.log(likes);
+                    var mapedLikes = like.likes.map(function(likes) {
+                        return likes.article + '';
+                    });
+                    console.log(mapedLikes);
+                    console.log(current_article);
+                    var pos = mapedLikes.indexOf(current_article);
+
+                    console.log(pos);
+
+
+                    if (pos > -1) {
+                        if (likes[pos].status == true) {
+
+                            likes.splice(pos, 1);
+                            console.log('splice');
+                        } else {
+                            likes[pos].status = !likes[pos].status;
+                        };
+
+                    } else {
+                        likes.push({
+                            article: current_article,
+                            status: true
+                        });
+                        console.log('push');
+                    };
+                };
+
+                console.log(like);
+                Like.findOneAndUpdate({
+                    user: current_username
+                }, {
+                    likes: like.likes
+                }, {
+                    upsert: true
+                }).exec().then(function(updatedlike) {
+
+                    res.status(200).send(updatedlike);
+                });
+
+            } else {
+
+                like = new Like({
+                    user: current_username,
+                    likes: [{
+                        article: current_article,
+                        status: true
+                    }]
+                });
+
+
+                like.save(function(err) {
+                    if (err) {
+                        console.error('ERROR!');
+                    }
+                    res.status(200).send(like);
+                });
+
+
+            };
+
+
+
         });
     });
 }
 
 exports.dislikeArticle = function(req, res) {
 
-    var current_username = req.user._id;
+    console.log('inside like')
+
+    var current_username = req.user.userData._id;
     var current_article = req.params.id;
 
     Article.findOneAndUpdate({
         _id: current_article
     }, {
         $inc: {
-            dislikes: 1
+            likes: 1
         }
     }).exec().then(function(article) {
-        Like.findOneAndUpdate({
+
+
+        Like.findOne({
             user: current_username,
-            'user.likes.article': current_article
-        }, {
-            'user.likes.status': false
-        }, {
-            upsert: true
-        }).exec().then(function(like) {
-            res.status(200).send(article);
+        }).lean().exec().then(function(like) {
+
+            if (!!like) {
+
+
+                if (like.likes.length < 1) {
+
+                    console.log('testsw', like);
+                    like.likes.push({
+                        article: current_article,
+                        status: false
+                    });
+                } else {
+                    console.log('testsw2', like);
+                    var likes = like.likes;
+                    console.log(likes);
+                    var mapedLikes = like.likes.map(function(likes) {
+                        return likes.article + '';
+                    });
+                    console.log(mapedLikes);
+                    console.log(current_article);
+                    var pos = mapedLikes.indexOf(current_article);
+
+                    console.log(pos);
+
+
+                    if (pos > -1) {
+                        if (likes[pos].status == false) {
+
+                            likes.splice(pos, 1);
+                            console.log('splice');
+                        } else {
+                            likes[pos].status = !likes[pos].status;
+                        };
+
+                    } else {
+                        likes.push({
+                            article: current_article,
+                            status: false
+                        });
+                        console.log('push');
+                    };
+                };
+
+                console.log(like);
+                Like.findOneAndUpdate({
+                    user: current_username
+                }, {
+                    likes: like.likes
+                }, {
+                    upsert: true
+                }).exec().then(function(updatedlike) {
+
+                    res.status(200).send(updatedlike);
+                });
+
+            } else {
+
+                like = new Like({
+                    user: current_username,
+                    likes: [{
+                        article: current_article,
+                        status: false
+                    }]
+                });
+
+
+                like.save(function(err) {
+                    if (err) {
+                        console.error('ERROR!');
+                    }
+                    res.status(200).send(like);
+                });
+
+
+            };
+
+
+
         });
     });
 
@@ -371,11 +523,11 @@ exports.dislikeArticle = function(req, res) {
 
 exports.likedArticles = function(req, res) {
 
-    var current_username = req.user._id;
+    var current_username = req.user.userData._id;
 
     Like.find({
         user: current_username,
-        'user.likes.status': true
+        'likes.status': true
     }).populate('article', 'name').exec().then(function(err, likes) {
         if (err) {
             res.status(200).send({
@@ -391,11 +543,11 @@ exports.likedArticles = function(req, res) {
 
 exports.dislikedArticles = function(req, res) {
 
-    var current_username = req.user._id;
+    var current_username = req.user.userData._id;
 
     Like.find({
         user: current_username,
-        'user.likes.status': true
+        'likes.status': true
     }).populate('article', 'name').exec().then(function(err, likes) {
         if (err) {
             res.status(200).send({
@@ -421,11 +573,11 @@ exports.dislikedArticles = function(req, res) {
 //Bookmark functions
 
 exports.bookmarkArticle = function(req, res) {
-    var current_username = req.user._id;
+    var current_username = req.user.userData._id;
     var current_article = req.params.id;
 
     var query = {
-        username: current_username,
+        user: current_username,
     };
 
     var update = {};
@@ -467,7 +619,7 @@ exports.bookmarkArticle = function(req, res) {
 
 exports.bookmarkedArticles = function(req, res) {
     Bookmark.find({
-        username: req.user._id,
+        user: req.user.userData._id,
     }).populate('articles', 'name').exec().then(function(err, bookmarks) {
         if (err) {
             res.json({
@@ -887,33 +1039,44 @@ function extractArticle(item, feed) {
 
 exports.getCategoryArticles = function(req, res) {
 
-    console.log('catarticles');
+    // console.log('catarticles');
     var reqCategory = req.params.cat;
     // var category = '';
 
     Category.findOne({
         name: reqCategory
     }, function(err, cat) {
-        console.log(cat);
+        // console.log(cat);
         if (!!cat) {
             Article.find({
                 read: true,
                 category: cat._id
-            }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
+            }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
                 articles.sort(compareArticles);
 
+
+
+
                 Bookmark.findOne({
-                    username: req.user._id,
-                }).exec().then(function(err, bookmarks) {
-                    if (!!bookmarks) {
+                    user: req.user.userData._id
+                }).exec().then(function(bookmark) {
+
+
+
+                    if (!!bookmark) {
                         // callback(bookmark.status);
 
                         for (var i = 0; i < articles.length; i++) {
-                            if (bookmarks.indexOf(articles[i]._id) > -1 == true) {
-                                articles[i].bookmark = true;
+
+
+
+                            console.log('yes bks', bookmark.articles.indexOf(articles[i]._id))
+
+                            if (bookmark.articles.indexOf(articles[i]._id) > -1) {
+                                articles[i]['bookmark'] = true;
                             } else {
-                                articles[i].bookmark = false;
+                                articles[i]['bookmark'] = false;
                             };
                         };
 
@@ -924,13 +1087,16 @@ exports.getCategoryArticles = function(req, res) {
                     };
 
                     Like.findOne({
-                        username: req.user._id,
-                    }).exec().then(function(err, likes) {
-                        if (!!likes) {
+                        user: req.user.userData._id,
+                    }).lean().exec().then(function(like) {
+                        if (!!like) {
+                            console.log('yes likes')
                             for (var i = 0; i < articles.length; i++) {
-                                for (var j = 0; j < likes.length; j++) {
-                                    if (likes[j].article == articles[i]._id) {
-                                        articles[i].like = likes[j].status;
+                                console.log(like)
+                                for (var j = 0; j < like.likes.length; j++) {
+                                    // console.log('wow', like.likes[j].article, articles[i]._id)
+                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                        articles[i].like = like.likes[j].status;
                                     };
                                 };
                             };

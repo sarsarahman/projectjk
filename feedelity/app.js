@@ -49,7 +49,7 @@ passport.use('userlogin', new LocalStrategy({
                     debugResponse = JSON.parse(chunk + '');
                 } catch (err) {
                     debugResponse = {
-                        error: 'error'
+                        error: err
                     }
                 }
 
