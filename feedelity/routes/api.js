@@ -427,7 +427,7 @@ exports.dislikeArticle = function(req, res) {
         _id: current_article
     }, {
         $inc: {
-            likes: 1
+            dislikes: 1
         }
     }).exec().then(function(article) {
 
