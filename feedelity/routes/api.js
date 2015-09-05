@@ -342,6 +342,7 @@ exports.likeArticle = function(req, res) {
 
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
+    var tempRes = false;
 
     Article.findOneAndUpdate({
         _id: current_article
@@ -361,44 +362,45 @@ exports.likeArticle = function(req, res) {
 
                 if (like.likes.length < 1) {
 
-                    console.log('testsw', like);
                     like.likes.push({
                         article: current_article,
                         status: true
                     });
+
+
+                    tempRes = true;
+
+
                 } else {
-                    console.log('testsw2', like);
                     var likes = like.likes;
-                    console.log(likes);
                     var mapedLikes = like.likes.map(function(likes) {
                         return likes.article + '';
                     });
-                    console.log(mapedLikes);
-                    console.log(current_article);
                     var pos = mapedLikes.indexOf(current_article);
 
-                    console.log(pos);
 
 
                     if (pos > -1) {
                         if (likes[pos].status == true) {
 
                             likes.splice(pos, 1);
-                            console.log('splice');
                         } else {
                             likes[pos].status = !likes[pos].status;
                         };
+
+                        tempRes = false;
+
 
                     } else {
                         likes.push({
                             article: current_article,
                             status: true
                         });
-                        console.log('push');
+                        tempRes = true;
+
                     };
                 };
 
-                console.log(like);
                 Like.findOneAndUpdate({
                     user: current_username
                 }, {
@@ -407,7 +409,9 @@ exports.likeArticle = function(req, res) {
                     upsert: true
                 }).exec().then(function(updatedlike) {
 
-                    res.status(200).send(updatedlike);
+                    res.status(200).send({
+                        status: tempRes
+                    });
                 });
 
             } else {
@@ -420,12 +424,17 @@ exports.likeArticle = function(req, res) {
                     }]
                 });
 
+                tempRes = true;
 
                 like.save(function(err) {
                     if (err) {
-                        console.error('ERROR!');
+                        console.error({
+                            error: error
+                        });
                     }
-                    res.status(200).send(like);
+                    res.status(200).send({
+                        status: tempRes
+                    });
                 });
 
 
@@ -439,10 +448,11 @@ exports.likeArticle = function(req, res) {
 
 exports.dislikeArticle = function(req, res) {
 
-    console.log('inside like')
 
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
+    var tempRes = false;
+
 
     Article.findOneAndUpdate({
         _id: current_article
@@ -462,44 +472,43 @@ exports.dislikeArticle = function(req, res) {
 
                 if (like.likes.length < 1) {
 
-                    console.log('testsw', like);
                     like.likes.push({
                         article: current_article,
                         status: false
                     });
+
+                    tempRes = true;
+
                 } else {
-                    console.log('testsw2', like);
                     var likes = like.likes;
-                    console.log(likes);
                     var mapedLikes = like.likes.map(function(likes) {
                         return likes.article + '';
                     });
-                    console.log(mapedLikes);
-                    console.log(current_article);
                     var pos = mapedLikes.indexOf(current_article);
 
-                    console.log(pos);
 
 
                     if (pos > -1) {
                         if (likes[pos].status == false) {
 
                             likes.splice(pos, 1);
-                            console.log('splice');
                         } else {
                             likes[pos].status = !likes[pos].status;
                         };
+
+                        tempRes = false;
+
 
                     } else {
                         likes.push({
                             article: current_article,
                             status: false
                         });
-                        console.log('push');
+                        tempRes = true;
+
                     };
                 };
 
-                console.log(like);
                 Like.findOneAndUpdate({
                     user: current_username
                 }, {
@@ -508,7 +517,9 @@ exports.dislikeArticle = function(req, res) {
                     upsert: true
                 }).exec().then(function(updatedlike) {
 
-                    res.status(200).send(updatedlike);
+                    res.status(200).send({
+                        status: tempRes
+                    });
                 });
 
             } else {
@@ -520,13 +531,18 @@ exports.dislikeArticle = function(req, res) {
                         status: false
                     }]
                 });
+                tempRes = true;
 
 
                 like.save(function(err) {
                     if (err) {
-                        console.error('ERROR!');
+                        console.error({
+                            error: err
+                        });
                     }
-                    res.status(200).send(like);
+                    res.status(200).send({
+                        status: tempRes
+                    });
                 });
 
 
@@ -549,7 +565,7 @@ exports.likedArticles = function(req, res) {
     Like.find({
         user: current_username,
         'likes.status': true
-    }).populate('article', 'name').exec().then(function(err, likes) {
+    }).populate('article').exec().then(function(err, likes) {
         if (err) {
             res.status(200).send({
                 error: 'error'
@@ -569,7 +585,7 @@ exports.dislikedArticles = function(req, res) {
     Like.find({
         user: current_username,
         'likes.status': true
-    }).populate('article', 'name').exec().then(function(err, likes) {
+    }).populate('article').exec().then(function(err, likes) {
         if (err) {
             res.status(200).send({
                 error: 'error'
@@ -604,14 +620,19 @@ exports.bookmarkArticle = function(req, res) {
     var update = {};
 
     Bookmark.findOne(query).exec().then(function(bookmark) {
+        var tempRes;
         if (!!bookmark) {
 
             var pos = bookmark.articles.indexOf(current_article);
 
             if (pos > -1) {
                 bookmark.articles.splice(pos, 1);
+
+                tempRes = false;
+
             } else {
                 bookmark.articles.push(current_article);
+                tempRes = true;
             };
 
             update = {
@@ -622,6 +643,7 @@ exports.bookmarkArticle = function(req, res) {
             update = {
                 articles: [current_article]
             }
+            tempRes = true;
 
         };
 
@@ -630,7 +652,9 @@ exports.bookmarkArticle = function(req, res) {
         };
 
         Bookmark.findOneAndUpdate(query, update, options).exec().then(function(updated_bookmark) {
-            res.status(200).send(updated_bookmark);
+            res.status(200).send({
+                status: tempRes
+            });
         });
     });
 }
@@ -642,13 +666,14 @@ exports.bookmarkArticle = function(req, res) {
 exports.bookmarkedArticles = function(req, res) {
     Bookmark.find({
         user: req.user.userData._id,
-    }).populate('articles', 'name').exec().then(function(err, bookmarks) {
-        if (err) {
-            res.json({
-                error: 'error'
-            })
-        } else {
+    }).populate('articles').exec().then(function(bookmarks) {
+
+        if (!!bookmarks) {
             res.json(bookmarks)
+        } else {
+            res.json({
+                error: err
+            })
         };
     });
 }
