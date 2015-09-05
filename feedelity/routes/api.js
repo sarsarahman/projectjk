@@ -160,6 +160,26 @@ var bookmarkSchema = mongoose.Schema({
 
 
 
+var preferredTagSchema = mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    tags: [{
+        tag: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Tag'
+        },
+        value: Number
+    }]
+});
+
+
+
+
+
+
+
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
 Category = mongoose.model('Category', catSchema);
@@ -169,6 +189,7 @@ User = mongoose.model('User', userSchema);
 AdminUser = mongoose.model('AdminUser', adminUserSchema);
 Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
+PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
 
 
 // Login and Signup functions
@@ -582,10 +603,11 @@ exports.bookmarkArticle = function(req, res) {
 
     var update = {};
 
-    Bookmark.findOne(query).exec().then(function(err, bookmark) {
+    Bookmark.findOne(query).exec().then(function(bookmark) {
         if (!!bookmark) {
 
             var pos = bookmark.articles.indexOf(current_article);
+
             if (pos > -1) {
                 bookmark.articles.splice(pos, 1);
             } else {
