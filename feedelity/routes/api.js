@@ -251,36 +251,36 @@ exports.adminLogin = function(userData, callback) {
 
 
 
-    addUser = new AdminUser({
-        name: 'Abdur Rahman',
-        username: 'admin',
-        password: 'password',
-        email: 'sarsarahman@gmail.com',
-        gender: 'Male',
-        mobileNumber: '9840903819',
-        location: 'Chennai',
-        dp: 'String',
-        status: true
+    // addUser = new AdminUser({
+    //     name: 'Abdur Rahman',
+    //     username: 'admin',
+    //     password: 'password',
+    //     email: 'sarsarahman@gmail.com',
+    //     gender: 'Male',
+    //     mobileNumber: '9840903819',
+    //     location: 'Chennai',
+    //     dp: 'String',
+    //     status: true
+    // });
+
+    // AdminUser.create(addUser).then(function(addUser) {
+    //     // res.status(200).send(adduser);
+    //       callback(addUser);
+    // });
+
+
+
+    AdminUser.findOne({
+        username: userData.username,
+        password: userData.password
+    }).lean().exec().then(function(user) {
+        if (!!user) {
+            user.role = 'admin';
+            callback(user);
+        } else {
+            callback(false);
+        };
     });
-
-    AdminUser.create(addUser).then(function(addUser) {
-        // res.status(200).send(adduser);
-          callback(addUser);
-    });
-
-
-
-//     AdminUser.findOne({
-//         username: userData.username,
-//         password: userData.password
-//     }).lean().exec().then(function(user) {
-//         if (!!user) {
-//             user.role = 'admin';
-//             callback(user);
-//         } else {
-//             callback(false);
-//         };
-//     });
 }
 
 
