@@ -14,6 +14,11 @@ function FeedelityCtrl($scope, $http, Upload) {
     $scope.trimmedCategorys = [];
 
 
+    $scope.logout = function() {
+        window.location.href = "/logout";
+    }
+
+
     $http({
         method: 'GET',
         url: '/api/feeds'
@@ -126,6 +131,8 @@ function FeedelityCtrl($scope, $http, Upload) {
 
 function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
 
+    $scope.page = 0;
+
     $scope.dateOptions = {
         startingDay: 1,
         showWeeks: false
@@ -137,7 +144,8 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
     $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
     $scope.format = $scope.formats[0];
     $scope.type = $route.current.type;
-    var articlesUrl = '/api/articles/' + $scope.type;
+    console.log($scope.type)
+    var articlesUrl = '/api/articles/' + $scope.type + '/' + $scope.page;
     $http({
         method: 'GET',
         url: articlesUrl
@@ -148,6 +156,36 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
     error(function(data, status, headers, config) {
         $scope.articles = []
     });
+
+    $scope.fetchArticles = function(direction) {
+
+        var paginate = false;
+
+        if (direction == 'previous' && $scope.page != 0) {
+            $scope.page--;
+            paginate = true;
+        } else if (direction == 'next') {
+            $scope.page++;
+            paginate = true;
+        };
+
+        if (paginate) {
+
+            var articlesUrl = '/api/articles/' + $scope.type + '/' + $scope.page;
+            $http({
+                method: 'GET',
+                url: articlesUrl
+            }).
+            success(function(data, status, headers, config) {
+                $scope.articles = data;
+                console.log(data);
+            }).
+            error(function(data, status, headers, config) {
+                $scope.articles = []
+            });
+
+        };
+    }
 
     $scope.$on('feedsRefreshed', function() {
         var articlesUrl = '/api/articles/' + $scope.type;
@@ -219,19 +257,19 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
     }
 
 
-    $scope.read = function(id) {
-        $scope.articles[id].read = !$scope.articles[id].read;
+    $scope.approved = function(id) {
+        $scope.articles[id].approved = !$scope.articles[id].approved;
         $scope.update(id);
     }
 
-    $scope.ensureRead = function(id) {
-        if ($scope.articles[id].read == false)
-            $scope.read(id);
+    $scope.ensureApproved = function(id) {
+        if ($scope.articles[id].approved == false)
+            $scope.approved(id);
     }
 
-    $scope.ensureReadAll = function(id) {
+    $scope.ensureApprovedAll = function(id) {
         $scope.articles.forEach(function(article, id) {
-            $scope.ensureRead(id);
+            $scope.ensureApproved(id);
         });
     }
 
@@ -508,6 +546,11 @@ function TagsCtrl($scope, $http) {
 }
 
 
+function LogoutCtrl($scope, $http) {
+    console.log('test');
+    window.location.href = "/logout";
+
+}
 
 function LocationsCtrl($scope, $http) {
     $scope.delete = function(id) {
@@ -567,5 +610,73 @@ function LocationsCtrl($scope, $http) {
         else if (status == 'Incomplete') return 'label-warning';
         else return 'label-error';
     }
+
+}
+
+
+
+
+
+
+
+
+function UsersCtrl($scope, $http, $route, Upload, $timeout) {
+
+    $scope.page = 0;
+    $scope.users = {};
+    var usersUrl = '/api/users/' + $scope.page;
+    $http({
+        method: 'GET',
+        url: usersUrl
+    }).
+    success(function(data, status, headers, config) {
+        $scope.users = data;
+    }).
+    error(function(data, status, headers, config) {
+        $scope.users = []
+    });
+
+    console.log($scope.users);
+
+    $scope.fetchUsers = function(direction) {
+
+        var paginate = false;
+
+        if (direction == 'previous' && $scope.page != 0) {
+            $scope.page--;
+            paginate = true;
+        } else if (direction == 'next') {
+            $scope.page++;
+            paginate = true;
+        };
+
+        if (paginate) {
+
+            var articlesUrl = '/api/users/' + $scope.page;
+            $http({
+                method: 'GET',
+                url: usersUrl
+            }).success(function(data, status, headers, config) {
+                $scope.users = data;
+                console.log(data);
+            }).error(function(data, status, headers, config) {
+                $scope.users = []
+            });
+
+        };
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 }

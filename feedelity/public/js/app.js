@@ -7,12 +7,12 @@ config(['$routeProvider', '$locationProvider', function($routeProvider, $locatio
     when('/articles/pending', {
         templateUrl: 'partial/articles',
         controller: ArticlesCtrl,
-        type: 'Pending'
+        type: 'pending'
     }).
     when('/articles/approved', {
         templateUrl: 'partial/articles',
         controller: ArticlesCtrl,
-        type: 'Approved'
+        type: 'approved'
     }).
     when('/articles/starred', {
         templateUrl: 'partial/articles',
@@ -37,7 +37,7 @@ config(['$routeProvider', '$locationProvider', function($routeProvider, $locatio
     }).
     when('/users', {
         templateUrl: 'partial/users',
-        controller: FeedsCtrl
+        controller: UsersCtrl
     }).
     otherwise({
         redirectTo: '/articles/pending'

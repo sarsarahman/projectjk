@@ -1,7 +1,10 @@
+
 .page-header
   h1 {{type | capitalize}} articles 
     small 
       span.badge(data-toggle="modal", data-target="#modArticle") {{articles.length}}
+
+
 .modal.fade#modArticle(tabindex="-1", role="dialog", aria-labelledby="Edit article", aria-hidden="true")
   .modal-dialog
     .modal-content
@@ -82,7 +85,6 @@
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='updateArticle()') Save
-
 
 
 
@@ -182,9 +184,9 @@
           button.btn.btn-primary(type="button", ng-click='refresh()')
             i.glyphicon.glyphicon-refresh
             |  Refresh
-          button.btn.btn-primary(type="button", ng-click='ensureReadAll()')
+          button.btn.btn-primary(type="button", ng-click='ensureApprovedAll()')
             i.glyphicon.glyphicon-folder-open
-            |  Read all
+            |  Approve all
           button.btn-sm.btn.btn-primary(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modAddArticle")
             i.glyphicon.glyphicon-plus
             |  Add New Article
@@ -192,7 +194,7 @@ p(ng-show='articles.length == 0') No such articles.
 .panel-group#accArticles
   .panel.panel-default(ng-repeat='article in articles | filter:search.text | feedSelected:search.feed')
     .panel-heading()
-      h4(ng-class="(article.read == true) ? 'panel-title article-read' : 'panel-title'")
+      h4(ng-class="(article.approved == true) ? 'panel-title article-read' : 'panel-title'")
         a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", onclick='return false;') {{article.title | limitTo:50}}
         small.pull-right.article-tb
           span {{article.date | timeago}}
@@ -208,7 +210,7 @@ p(ng-show='articles.length == 0') No such articles.
             a(href="{{article.link}}", target='new')
               i.glyphicon.glyphicon-trash
           span
-            a(href="", ng-click="read($index)", ng-class="(article.read == false) ? 'selected' : 'unselected'")
+            a(href="", ng-click="approved($index)", ng-class="(article.approved == false) ? 'selected' : 'unselected'")
               i.glyphicon.glyphicon-ok-sign
           span
             a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'")
@@ -216,3 +218,16 @@ p(ng-show='articles.length == 0') No such articles.
     .panel-collapse.collapse(id="article-{{$index}}")
       .panel-body
         div(ng-bind-html="article.summary")
+
+
+nav 
+  .page_number {{page}}
+  ul.pager
+    li.previous(ng-click='fetchArticles("previous")')
+      a
+        span(aria-hidden='true') ←
+        |  Newer
+    li.next(ng-click='fetchArticles("next")')
+      a
+        | Older 
+        span(aria-hidden='true') →

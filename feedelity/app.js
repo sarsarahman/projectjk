@@ -9,6 +9,7 @@ var express = require('express'),
     https = require('https'),
     path = require('path'),
     cookieParser = require('cookie-parser'),
+    bodyParser = require('body-parser'),
     session = require('express-session'),
     passport = require('passport'),
     flash = require('connect-flash'),
@@ -30,8 +31,6 @@ passport.use('userlogin', new LocalStrategy({
     },
     function(req, username, password, done) {
 
-
-
         var YOUR_APP_ID = '110406559309977',
             YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
             grant_type = 'client_credentials',
@@ -39,8 +38,6 @@ passport.use('userlogin', new LocalStrategy({
             ACCESS_TOKEN = '110406559309977|p0yNFQU5M_GtxAyak3TCWBdGqWY',
             debugResponse = '',
             userData = req.body;
-
-
 
         https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
             fb_2_res.on("data", function(chunk) {
@@ -81,27 +78,52 @@ passport.use('userlogin', new LocalStrategy({
                 };
             });
         });
+    }));
 
+passport.use('adminlogin', new LocalStrategy({
+        usernameField: 'username',
+        passwordField: 'password',
+        passReqToCallback: true,
+    },
+    function(req, username, password, done) {
+        console.log(req.body)
+        var resUserData = api.adminLogin(req.body, function(user) {
+            console.log(user)
 
+            if (!!user) {
+                return done(null, user);
 
+            } else {
 
+                return done(null, false, {
+                    error: 'Invalid credentials!!!'
+                });
+            };
 
-
-
-
-
+        });
 
     }));
 
 
 
+
+
 function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
+    if (req.isAuthenticated()) {}
     res.json({
         error: "Not Authenticated!!!"
     });
+}
+
+
+
+function ensureAdminAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        res.redirect('/login');
+    }
+
 }
 
 
@@ -122,6 +144,7 @@ app.configure(function() {
     app.use(cookieParser());
     app.use(express.bodyParser());
     app.use(express.methodOverride());
+    // app.use(express.json());
 
 
     app.use(express.static(path.join(__dirname, 'public')));
@@ -139,40 +162,6 @@ app.configure(function() {
 
 
 
-
-
-// passport.use('adminlogin', new LocalStrategy({
-//         passReqToCallback: true
-//     },
-//     function(req, username, password, done) {
-//         // check in mongo if a user with username exists or not
-//         User.findOne({
-//                 'username': username
-//             },
-//             function(err, user) {
-//                 // In case of any error, return using the done method
-//                 if (err)
-//                     return done(err);
-//                 // Username does not exist, log error & redirect back
-//                 if (!user) {
-//                     console.log('User Not Found with username ' + username);
-//                     return done(null, false,
-//                         req.flash('message', 'User Not found.'));
-//                 }
-//                 // User exists but wrong password, log the error 
-//                 if (!isValidPassword(user, password)) {
-//                     console.log('Invalid Password');
-//                     return done(null, false,
-//                         req.flash('message', 'Invalid Password'));
-//                 }
-//                 // User and password both match, return user from 
-//                 // done method which will be treated like success
-//                 return done(null, user);
-//             }
-//         );
-//     }));
-
-
 // development only
 if (app.get('env') === 'development') {
     app.use(express.errorHandler());
@@ -184,9 +173,27 @@ if (app.get('env') === 'production') {
 };
 
 // Routes
-app.get('/', routes.index);
+app.get('/', ensureAdminAuthenticated, routes.index);
 app.get('/partial/:name', routes.partial);
 
+
+app.get('/login', routes.login);
+
+app.post('/login',
+    passport.authenticate('adminlogin', {
+        successRedirect: '/'
+    }),
+    function(req, res) {
+        // console.log(req.user);
+        res.status(200).send('req');
+
+    });
+
+
+app.get('/logout', function(req, res) {
+    req.logout();
+    res.redirect('/');
+});
 
 
 
@@ -199,30 +206,34 @@ app.post('/api/login',
 
     });
 // Mobile App API
-app.get('/api/categoryarticles/:cat',
-    ensureAuthenticated, 
+app.get('/api/categoryarticles/:cat/:page',
     api.getCategoryArticles);
+
+app.get('/api/recentarticles/:page',
+    api.getRecentArticles);
+
+app.get('/api/trendarticles/:page',
+    api.getTrendArticles);
+
+app.get('/api/bookmarked/:page', api.bookmarkedArticles);
 
 app.get('/api/like/:id', api.likeArticle);
 app.get('/api/dislike/:id', api.dislikeArticle);
 app.get('/api/bookmark/:id', api.bookmarkArticle);
 
+app.get('/api/preferredtags', api.getPreferredTag);
+app.post('/api/preferredtags', api.updatePreferredTag);
 
 app.get('/api/liked', api.likedArticles);
 app.get('/api/disliked', api.dislikedArticles);
-app.get('/api/bookmarked', api.bookmarkedArticles);
-
-
-
-
 
 // JSON API
+app.get('/api/users/:page', api.fetchUsers);
 app.get('/api/refresh', api.refreshFeeds);
 
-
-app.get('/api/articles/pending', api.getUnreadArticles);
-app.get('/api/articles/approved', api.getReadArticles);
-app.get('/api/articles/starred', api.getStarredArticles);
+app.get('/api/articles/pending/:page', api.getPendingArticles);
+app.get('/api/articles/approved/:page', api.getApprovedArticles);
+app.get('/api/articles/starred/:page', api.getStarredArticles);
 app.post('/api/articles', api.addArticle);
 app.post('/api/articles/:id', api.updateArticle);
 app.delete('/api/articles/:id', api.delArticle);

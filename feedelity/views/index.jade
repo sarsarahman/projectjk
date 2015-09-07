@@ -41,8 +41,15 @@ block body
             a(href="users")
               i.glyphicon.glyphicon-user
               span.menu-item.hidden-xs Users
+          li
+            a(ng-click='logout()')
+              i.glyphicon.glyphicon-log-out
+              span.menu-item.hidden-xs Users
       .col-xs-10#view(ng-view)
 
+  script(src='js/lib/jquery/jquery-2.0.3.min.js')
+  script(src='js/lib/jquery/jquery.timeago.js')
+  script(src='bootstrap/js/bootstrap.min.js')
   script(src='js/lib/angular/angular.js')
   script(src='js/lib/angular/angular-route.js')
   script(src="js/lib/angular/angular-sanitize.min.js")
@@ -56,7 +63,4 @@ block body
   script(src='js/controllers.js')
   script(src='js/filters.js')
   script(src='js/directives.js')
-  script(src='js/lib/jquery/jquery-2.0.3.min.js')
-  script(src='js/lib/jquery/jquery.timeago.js')
-  script(src='bootstrap/js/bootstrap.min.js')
   script(src='js/lib/affix.js')

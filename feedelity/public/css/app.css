@@ -73,3 +73,18 @@ datetimepicker{
   width: 46px !important;
 }
 
+
+.page_number{
+  text-align: center;
+}
+
+.form-signin{
+  width: 400px;
+  padding: 25px;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.2) 1px 1px 7px;
+  margin: auto;
+  top: 50%;
+  transform: translateY(50%);
+}
+

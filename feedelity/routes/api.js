@@ -99,7 +99,7 @@ var articleSchema = mongoose.Schema({
     description: String,
     link: String,
     author: String,
-    read: Boolean,
+    approved: Boolean,
     starred: Boolean,
     imgUrl: String,
     likes: Number,
@@ -192,79 +192,6 @@ Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
 
 
-// Login and Signup functions
-
-// exports.testUserLogin = function(req, res) {
-
-//     console.log(req.body)
-
-//     var YOUR_APP_ID = '110406559309977',
-//         YOUR_APP_SECRET = '95ce8ace2c4d35b132b7ad4a3411ddd6',
-//         grant_type = 'client_credentials',
-//         INPUT_TOKEN = req.body.access_token,
-//         ACCESS_TOKEN = '',
-//         debugResponse = '',
-//         userData = req.body;
-
-
-//     https.get("https://graph.facebook.com/oauth/access_token?client_id=" + YOUR_APP_ID + "&client_secret=" + YOUR_APP_SECRET + "&grant_type=" + grant_type, function(fb_1_res) {
-//         fb_1_res.on("data", function(chunk) {
-//             var textChunk = chunk + '';
-//             if (textChunk.indexOf("access_token=") > -1) {
-//                 ACCESS_TOKEN = textChunk.split("access_token=")[1]
-//                 https.get("https://graph.facebook.com/debug_token?input_token=" + INPUT_TOKEN + "&access_token=" + ACCESS_TOKEN, function(fb_2_res) {
-//                     fb_2_res.on("data", function(chunk) {
-//                         debugResponse = JSON.parse(chunk + '');
-
-//                         if (debugResponse.data) {
-//                             // console.log(debugResponse);
-//                             // console.log(req.body);
-
-
-//                             if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
-
-//                                 res.status(200).send({
-//                                     debugResponse: debugResponse,
-//                                     userData: userData
-//                                 });
-
-//                             } else {
-
-//                                 res.status(200).send({
-//                                     error: 'invalid_details'
-//                                 });
-//                             };
-
-//                         } else {
-//                             res.status(200).send({
-//                                 debugResponse: debugResponse
-//                             });
-//                         };
-
-//                     });
-//                 });
-//             }
-//         });
-
-
-
-//     }).on('error', function(e) {
-//         console.log("Got error: " + e.message);
-//     });
-
-
-
-
-
-
-
-
-
-// }
-
-
-
-
 
 exports.userLogin = function(userData, callback) {
 
@@ -292,45 +219,172 @@ exports.userLogin = function(userData, callback) {
         email: userData.email
     }, update, {
         upsert: true
-    }).exec().then(function(user) {
+    }).lean().exec().then(function(user) {
+        user.role = 'user';
         callback(user);
     });
 
 }
 
 
+exports.fetchUsers = function(req, res) {
+
+    var paginate = 20;
+    var page = req.params.page;
+    // var page = 0;
+
+
+    User.find().sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).exec().then(function(users) {
+        console.log(users)
+        res.json(users);
+    });
+
+}
 
 
 
-exports.adminLogin = function(userData) {
+
+
+exports.adminLogin = function(userData, callback) {
+
+
+
+    // addUser = new AdminUser({
+    //     name: 'Abdur Rahman',
+    //     username: 'admin',
+    //     password: 'password',
+    //     email: 'sarsarahman@gmail.com',
+    //     gender: 'Male',
+    //     mobileNumber: '9840903819',
+    //     location: 'Chennai',
+    //     dp: 'String',
+    //     status: true
+    // });
+
+    // AdminUser.create(addUser).then(function(addUser) {
+    //     res.status(200).send(adduser);
+    // });
+
+
 
     AdminUser.findOne({
-        email: userData.email
-    }).exec().then(function(err, like) {
-        if (err) {
-            // Call Signup
-            // loginForAdmin(userData);
-            return ''
+        username: userData.username,
+        password: userData.password
+    }).lean().exec().then(function(user) {
+        if (!!user) {
+            user.role = 'admin';
+            callback(user);
         } else {
-            // Call Login
-            // signupForAdmin(userData)
-            return like.status;
+            callback(false);
         };
     });
 }
 
 
-function loginForAdmin(userData) {
 
+exports.updatePreferredTag = function(req, res) {
+    var sellectedTags = req.body;
+    var current_username = req.user.userData._id;
+    PreferredTag.findOne({
+        user: current_username,
+    }).lean().exec().then(function(preferredTag) {
+
+        if (!!preferredTag) {
+
+            if (preferredTag.tags.length < 1) {
+
+                for (var i = 0; i < sellectedTags.length; i++) {
+                    preferredTag.tags.push({
+                        tag: sellectedTags[i],
+                        value: 1
+                    });
+                };
+
+            } else {
+                for (var i = 0; i < preferredTag.tags.length; i++) {
+                    var pos = sellectedTags.indexOf(preferredTag.tags[i].tag);
+                    if (pos > -1) {
+                        sellectedTags.splice(pos, 1);
+                    } else {
+                        preferredTag.tags.splice(i, 1);
+                    };
+                };
+
+                for (var i = 0; i < sellectedTags.length; i++) {
+                    preferredTag.tags.push({
+                        tag: sellectedTags[i],
+                        value: 1
+                    });
+                };
+            };
+
+            PreferredTag.findOneAndUpdate({
+                user: current_username
+            }, {
+                tags: preferredTag.tags
+            }, {
+                upsert: true
+            }).exec().then(function(updatedPreferredTag) {
+                res.status(200).send({
+                    status: true
+                });
+            });
+        } else {
+            var preferredTag = new PreferredTag({
+                user: current_username,
+                tags: []
+            });
+            for (var i = 0; i < sellectedTags.length; i++) {
+                preferredTag.tags.push({
+                    tag: sellectedTags[i],
+                    value: 1
+                });
+            };
+            preferredTag.save(function(err) {
+                if (err) {
+                    console.error({
+                        error: error
+                    });
+                }
+                res.status(200).send({
+                    status: true
+                });
+            });
+        };
+    });
 }
 
 
-// function signupForAdmin(userData) {
 
-// }
+exports.getPreferredTag = function(req, res) {
 
+    var current_username = req.user.userData._id;
+    PreferredTag.findOne({
+        user: current_username,
+    }).lean().exec().then(function(preferredTag) {
 
-
+        if (!!preferredTag) {
+            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
+                return tag.tag + '';
+            });
+            if (mapedPreferredTag.length > 0) {
+                res.status(200).send({
+                    tags: mapedPreferredTag
+                });
+            } else {
+                res.status(200).send({
+                    error: 'no tags preffered'
+                });
+            };
+        } else {
+            res.status(200).send({
+                error: 'no tags preffered'
+            });
+        };
+    });
+}
 
 
 
@@ -664,12 +718,52 @@ exports.bookmarkArticle = function(req, res) {
 
 
 exports.bookmarkedArticles = function(req, res) {
-    Bookmark.find({
-        user: req.user.userData._id,
-    }).populate('articles').exec().then(function(bookmarks) {
+
+    var current_username = req.user.userData._id;
+
+    var paginate = 20;
+    var page = req.params.page;
+
+    Bookmark.findOne({
+        user: current_username,
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('articles').lean().exec().then(function(bookmarks) {
 
         if (!!bookmarks) {
-            res.json(bookmarks)
+            var articles = [];
+            articles = bookmarks.articles;
+
+
+            console.log(articles);
+
+
+            Like.findOne({
+                user: req.user.userData._id,
+            }).lean().exec().then(function(like) {
+                if (!!like) {
+                    console.log('yes likes', articles.length)
+                    for (var i = 0; i < articles.length; i++) {
+                        console.log(like)
+                        articles[i].bookmark = true;
+                        for (var j = 0; j < like.likes.length; j++) {
+                            // console.log('wow', like.likes[j].article, articles[i]._id)
+                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                articles[i].like = like.likes[j].status;
+                            };
+                        };
+                    };
+                }
+                res.json(bookmarks);
+            });
+
+
+
+
+
+
+
+            // res.json(bookmarks)
         } else {
             res.json({
                 error: err
@@ -736,15 +830,6 @@ exports.addFeed = function(req, res) {
 
     var categoryId = '';
     var locationId = '';
-
-    // if (req.body.category.hasOwnProperty('_id')) {
-    //     categoryId = req.body.category._id;
-    // };
-
-    // if (req.body.location.hasOwnProperty('_id')) {
-    //     locationId = req.body.location._id;
-    // };
-
 
     addFeed = new Feed({
         name: url,
@@ -859,28 +944,47 @@ function refreshFeed(feed, callBack) {
 
 // Articles functions
 
-exports.getUnreadArticles = function(req, res) {
+exports.getPendingArticles = function(req, res) {
+    var paginate = 20;
+    var page = req.params.page;
+    // var page = 0;
+
+
     Article.find({
-        read: false
-    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
+        approved: false
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
 }
 
-exports.getReadArticles = function(req, res) {
+exports.getApprovedArticles = function(req, res) {
+    var paginate = 20;
+    var page = req.params.page;
+
     Article.find({
-        read: true
-    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
+        approved: true
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
 }
 
 exports.getStarredArticles = function(req, res) {
+
+    var paginate = 20;
+    var page = req.params.page;
+
+
     Article.find({
         starred: true
-    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
         articles.sort(compareArticles);
         res.json(articles);
     });
@@ -919,7 +1023,7 @@ exports.addArticle = function(req, res) {
 
     addArticle = new Article({
         starred: false,
-        read: false,
+        approved: false,
         name: req.body.name,
         title: req.body.title,
         summary: req.body.summary,
@@ -998,7 +1102,7 @@ exports.updateArticle = function(req, res) {
 
     var update = {
         starred: req.body.starred,
-        read: req.body.read,
+        approved: req.body.approved,
         name: req.body.name,
         title: req.body.title,
         summary: req.body.summary,
@@ -1075,7 +1179,7 @@ function extractArticle(item, feed) {
         location: locationId,
         imgUrl: '',
         _feed: feed._id,
-        read: false,
+        approved: false,
         starred: false
     });
 }
@@ -1085,6 +1189,9 @@ function extractArticle(item, feed) {
 
 
 exports.getCategoryArticles = function(req, res) {
+
+    var paginate = 20;
+    var page = req.params.page;
 
     // console.log('catarticles');
     var reqCategory = req.params.cat;
@@ -1096,9 +1203,11 @@ exports.getCategoryArticles = function(req, res) {
         // console.log(cat);
         if (!!cat) {
             Article.find({
-                read: true,
+                approved: true,
                 category: cat._id
-            }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+            }).sort({
+                date: -1
+            }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
                 articles.sort(compareArticles);
 
@@ -1162,21 +1271,135 @@ exports.getCategoryArticles = function(req, res) {
 
 
 
-// function hasBookmarked(current_article, current_username, callback) {
+exports.getRecentArticles = function(req, res) {
+
+    var paginate = 20;
+    var page = req.params.page;
+
+    Article.find({
+        approved: true,
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+        articles.sort(compareArticles);
+        Bookmark.findOne({
+            user: req.user.userData._id
+        }).exec().then(function(bookmark) {
+            if (!!bookmark) {
+                for (var i = 0; i < articles.length; i++) {
+
+                    if (bookmark.articles.indexOf(articles[i]._id) > -1) {
+                        articles[i]['bookmark'] = true;
+                    } else {
+                        articles[i]['bookmark'] = false;
+                    };
+                };
+            } else {
+                for (var i = 0; i < articles.length; i++) {
+                    articles[i].bookmark = false;
+                };
+            };
+            Like.findOne({
+                user: req.user.userData._id,
+            }).lean().exec().then(function(like) {
+                if (!!like) {
+                    for (var i = 0; i < articles.length; i++) {
+                        console.log(like)
+                        for (var j = 0; j < like.likes.length; j++) {
+                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                articles[i].like = like.likes[j].status;
+                            };
+                        };
+                    };
+                }
+                res.json(articles);
+            });
+        });
+    });
 
 
-//     Bookmark.findOne({
-//         username: current_username,
-//         article: current_article
-//     }).exec().then(function(err, bookmark) {
-//         if (!!bookmark) {
-//             callback(bookmark.status);
-//         } else {
-//             callback(false);
-//         };
-//     });
+}
 
-// }
+
+
+exports.getTrendArticles = function(req, res) {
+
+    var current_username = req.user.userData._id;
+
+    var paginate = 20;
+    var page = req.params.page;
+
+
+    PreferredTag.findOne({
+        user: current_username,
+    }).lean().exec().then(function(preferredTag) {
+
+        if (!!preferredTag) {
+            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
+                return tag.tag + '';
+            });
+
+            Article.find({
+                approved: true,
+                tags: mapedPreferredTag
+            }).sort({
+                date: -1
+            }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+                articles.sort(compareArticles);
+                Bookmark.findOne({
+                    user: req.user.userData._id
+                }).exec().then(function(bookmark) {
+                    if (!!bookmark) {
+                        for (var i = 0; i < articles.length; i++) {
+
+                            if (bookmark.articles.indexOf(articles[i]._id) > -1) {
+                                articles[i]['bookmark'] = true;
+                            } else {
+                                articles[i]['bookmark'] = false;
+                            };
+                        };
+                    } else {
+                        for (var i = 0; i < articles.length; i++) {
+                            articles[i].bookmark = false;
+                        };
+                    };
+                    Like.findOne({
+                        user: req.user.userData._id,
+                    }).lean().exec().then(function(like) {
+                        if (!!like) {
+                            for (var i = 0; i < articles.length; i++) {
+                                console.log(like)
+                                for (var j = 0; j < like.likes.length; j++) {
+                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                        articles[i].like = like.likes[j].status;
+                                    };
+                                };
+                            };
+                        }
+                        res.json(articles);
+                    });
+                });
+            });
+
+        } else {
+            res.status(200).send({
+                error: 'no articles found'
+            });
+        };
+    });
+
+
+
+
+
+
+}
+
+
+
+
+
+
 
 
 
