@@ -1198,8 +1198,10 @@ exports.getCategoryArticles = function(req, res) {
     var reqCategory = req.params.cat;
     // var category = '';
 
+    console.log(page, reqCategory)
+
     Category.findOne({
-        name: reqCategory
+        name: reqCategory,
     }, function(err, cat) {
         // console.log(cat);
         if (!!cat) {
