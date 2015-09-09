@@ -23,7 +23,7 @@ var request = require('request'),
 
 var genarateUniqueHash = function() {
     var hash = crypto.createHash('md5').update(new Date().toISOString()).digest('hex');
-    console.log(hash)
+    // console.log(hash)
     return hash;
 }
 
@@ -237,7 +237,7 @@ exports.fetchUsers = function(req, res) {
     User.find().sort({
         date: -1
     }).skip(page * paginate).limit(paginate).exec().then(function(users) {
-        console.log(users)
+        // console.log(users)
         res.json(users);
     });
 
@@ -393,8 +393,6 @@ exports.getPreferredTag = function(req, res) {
 
 exports.likeArticle = function(req, res) {
 
-    console.log('inside like')
-
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
     var tempRes = false;
@@ -406,53 +404,35 @@ exports.likeArticle = function(req, res) {
             likes: 1
         }
     }).exec().then(function(article) {
-
-
         Like.findOne({
             user: current_username,
         }).lean().exec().then(function(like) {
-
             if (!!like) {
-
-
                 if (like.likes.length < 1) {
-
                     like.likes.push({
                         article: current_article,
                         status: true
                     });
-
-
                     tempRes = true;
-
-
                 } else {
                     var likes = like.likes;
                     var mapedLikes = like.likes.map(function(likes) {
                         return likes.article + '';
                     });
                     var pos = mapedLikes.indexOf(current_article);
-
-
-
                     if (pos > -1) {
                         if (likes[pos].status == true) {
-
                             likes.splice(pos, 1);
                         } else {
                             likes[pos].status = !likes[pos].status;
                         };
-
                         tempRes = false;
-
-
                     } else {
                         likes.push({
                             article: current_article,
                             status: true
                         });
                         tempRes = true;
-
                     };
                 };
 
@@ -463,14 +443,11 @@ exports.likeArticle = function(req, res) {
                 }, {
                     upsert: true
                 }).exec().then(function(updatedlike) {
-
                     res.status(200).send({
                         status: tempRes
                     });
                 });
-
             } else {
-
                 like = new Like({
                     user: current_username,
                     likes: [{
@@ -480,7 +457,6 @@ exports.likeArticle = function(req, res) {
                 });
 
                 tempRes = true;
-
                 like.save(function(err) {
                     if (err) {
                         console.error({
@@ -502,13 +478,9 @@ exports.likeArticle = function(req, res) {
 }
 
 exports.dislikeArticle = function(req, res) {
-
-
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
     var tempRes = false;
-
-
     Article.findOneAndUpdate({
         _id: current_article
     }, {
@@ -516,15 +488,10 @@ exports.dislikeArticle = function(req, res) {
             dislikes: 1
         }
     }).exec().then(function(article) {
-
-
         Like.findOne({
             user: current_username,
         }).lean().exec().then(function(like) {
-
             if (!!like) {
-
-
                 if (like.likes.length < 1) {
 
                     like.likes.push({
@@ -552,8 +519,6 @@ exports.dislikeArticle = function(req, res) {
                         };
 
                         tempRes = false;
-
-
                     } else {
                         likes.push({
                             article: current_article,
@@ -571,14 +536,11 @@ exports.dislikeArticle = function(req, res) {
                 }, {
                     upsert: true
                 }).exec().then(function(updatedlike) {
-
                     res.status(200).send({
                         status: tempRes
                     });
                 });
-
             } else {
-
                 like = new Like({
                     user: current_username,
                     likes: [{
@@ -587,7 +549,6 @@ exports.dislikeArticle = function(req, res) {
                     }]
                 });
                 tempRes = true;
-
 
                 like.save(function(err) {
                     if (err) {
@@ -599,12 +560,7 @@ exports.dislikeArticle = function(req, res) {
                         status: tempRes
                     });
                 });
-
-
             };
-
-
-
         });
     });
 
@@ -721,7 +677,6 @@ exports.bookmarkArticle = function(req, res) {
 exports.bookmarkedArticles = function(req, res) {
 
     var current_username = req.user.userData._id;
-
     var paginate = 20;
     var page = req.params.page;
 
@@ -734,18 +689,13 @@ exports.bookmarkedArticles = function(req, res) {
         if (!!bookmarks) {
             var articles = [];
             articles = bookmarks.articles;
-
-
-            console.log(articles);
-
-
             Like.findOne({
                 user: req.user.userData._id,
             }).lean().exec().then(function(like) {
                 if (!!like) {
-                    console.log('yes likes', articles.length)
+                    // console.log('yes likes', articles.length)
                     for (var i = 0; i < articles.length; i++) {
-                        console.log(like)
+                        // console.log(like)
                         articles[i].bookmark = true;
                         for (var j = 0; j < like.likes.length; j++) {
                             // console.log('wow', like.likes[j].article, articles[i]._id)
@@ -755,19 +705,33 @@ exports.bookmarkedArticles = function(req, res) {
                         };
                     };
                 }
-                res.json(bookmarks);
+                res.json(bookmarks.articles);
             });
-
-
-
-
-
-
-
-            // res.json(bookmarks)
         } else {
             res.json({
                 error: err
+            })
+        };
+    });
+}
+
+
+///MaxLimit
+exports.bookmarkedArticlesMaxLimit = function(req, res) {
+    var current_username = req.user.userData._id;
+    Bookmark.findOne({
+        user: current_username,
+    }).lean().exec().then(function(bookmarks) {
+
+        if (!!bookmarks) {
+            var articles = [];
+            articles = bookmarks.articles;
+            res.json({
+                pagelimit: Math.ceil(articles.length / 20)
+            })
+        } else {
+            res.json({
+                error: 'No articles found!!!'
             })
         };
     });
@@ -1000,7 +964,7 @@ exports.getArticle = function(req, res) {
 }
 
 exports.addArticle = function(req, res) {
-    console.log('aad');
+    // console.log('aad');
     var article = req.body;
 
     if (req.body.tags.length > 0) {
@@ -1157,12 +1121,12 @@ function extractArticle(item, feed) {
 
     if (feed.category != '') {
         categoryId = feed.category;
-        console.log(feed.category)
+        // console.log(feed.category)
     };
 
     if (feed.location != '') {
         locationId = feed.location;
-        console.log(feed)
+        // console.log(feed)
 
     };
 
@@ -1188,17 +1152,101 @@ function extractArticle(item, feed) {
 
 
 
+exports.getSearchArticles = function(req, res) {
+
+    var searchdata = req.params.searchdata;
+    var paginate = 20;
+    var page = req.params.page;
+
+    Article.find({
+        approved: true,
+        $or: [{
+            'title': new RegExp(searchdata, "i")
+        }, {
+            'summary': new RegExp(searchdata, "i")
+        }, {
+            'description': new RegExp(searchdata, "i")
+        }]
+
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+        articles.sort(compareArticles);
+        Bookmark.findOne({
+            user: req.user.userData._id
+        }).exec().then(function(bookmark) {
+            if (!!bookmark) {
+                for (var i = 0; i < articles.length; i++) {
+
+                    if (bookmark.articles.indexOf(articles[i]._id) > -1) {
+                        articles[i]['bookmark'] = true;
+                    } else {
+                        articles[i]['bookmark'] = false;
+                    };
+                };
+            } else {
+                for (var i = 0; i < articles.length; i++) {
+                    articles[i].bookmark = false;
+                };
+            };
+            Like.findOne({
+                user: req.user.userData._id,
+            }).lean().exec().then(function(like) {
+                if (!!like) {
+                    for (var i = 0; i < articles.length; i++) {
+                        for (var j = 0; j < like.likes.length; j++) {
+                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                articles[i].like = like.likes[j].status;
+                            };
+                        };
+                    };
+                }
+                res.json(articles);
+            });
+        });
+    });
+}
+
+
+exports.getSearchArticlesMaxLimit = function(req, res) {
+
+    var searchdata = req.params.searchdata;
+
+    Article.find({
+        approved: true,
+        $or: [{
+            'title': new RegExp(searchdata, "i")
+        }, {
+            'summary': new RegExp(searchdata, "i")
+        }, {
+            'description': new RegExp(searchdata, "i")
+        }]
+
+    }).lean().exec().then(function(articles) {
+        articles.sort(compareArticles);
+
+        if (!!articles) {
+            articles.sort(compareArticles);
+            res.json({
+                pagelimit: Math.ceil(articles.length / 20)
+            })
+        } else {
+            res.json({
+                error: "No articles found!!!"
+            });
+        };
+
+    });
+}
+
+
 
 exports.getCategoryArticles = function(req, res) {
 
     var paginate = 20;
     var page = req.params.page;
-
-    // console.log('catarticles');
     var reqCategory = req.params.cat;
-    // var category = '';
 
-    console.log(page, reqCategory)
 
     Category.findOne({
         name: reqCategory,
@@ -1213,25 +1261,11 @@ exports.getCategoryArticles = function(req, res) {
             }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
                 articles.sort(compareArticles);
-
-
-
-
                 Bookmark.findOne({
                     user: req.user.userData._id
                 }).exec().then(function(bookmark) {
-
-
-
                     if (!!bookmark) {
-                        // callback(bookmark.status);
-
                         for (var i = 0; i < articles.length; i++) {
-
-
-
-                            console.log('yes bks', bookmark.articles.indexOf(articles[i]._id))
-
                             if (bookmark.articles.indexOf(articles[i]._id) > -1) {
                                 articles[i]['bookmark'] = true;
                             } else {
@@ -1249,9 +1283,7 @@ exports.getCategoryArticles = function(req, res) {
                         user: req.user.userData._id,
                     }).lean().exec().then(function(like) {
                         if (!!like) {
-                            console.log('yes likes')
                             for (var i = 0; i < articles.length; i++) {
-                                console.log(like)
                                 for (var j = 0; j < like.likes.length; j++) {
                                     // console.log('wow', like.likes[j].article, articles[i]._id)
                                     if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
@@ -1263,6 +1295,43 @@ exports.getCategoryArticles = function(req, res) {
                         res.json(articles);
                     });
                 });
+            });
+        } else {
+            res.json({
+                error: "No articles found!!!"
+            });
+        }
+    });
+}
+
+
+
+
+exports.getCategoryArticlesMaxLimit = function(req, res) {
+
+    var reqCategory = req.params.cat;
+
+    Category.findOne({
+        name: reqCategory,
+    }, function(err, cat) {
+        if (!!cat) {
+            Article.find({
+                approved: true,
+                category: cat._id
+            }).lean().exec().then(function(articles) {
+
+                if (!!articles) {
+                    articles.sort(compareArticles);
+                    res.json({
+                        pagelimit: Math.ceil(articles.length / 20)
+                    })
+                } else {
+
+                    res.json({
+                        error: "No articles found!!!"
+                    });
+
+                };
             });
         } else {
             res.json({
@@ -1307,7 +1376,6 @@ exports.getRecentArticles = function(req, res) {
             }).lean().exec().then(function(like) {
                 if (!!like) {
                     for (var i = 0; i < articles.length; i++) {
-                        console.log(like)
                         for (var j = 0; j < like.likes.length; j++) {
                             if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
                                 articles[i].like = like.likes[j].status;
@@ -1321,6 +1389,26 @@ exports.getRecentArticles = function(req, res) {
     });
 
 
+}
+
+
+exports.getRecentArticlesMaxLimit = function(req, res) {
+    Article.find({
+        approved: true,
+    }).lean().exec().then(function(articles) {
+        articles.sort(compareArticles);
+
+        if (!!articles) {
+            articles.sort(compareArticles);
+            res.json({
+                pagelimit: Math.ceil(articles.length / 20)
+            })
+        } else {
+            res.json({
+                error: "No articles found!!!"
+            });
+        };
+    });
 }
 
 
@@ -1371,7 +1459,6 @@ exports.getTrendArticles = function(req, res) {
                     }).lean().exec().then(function(like) {
                         if (!!like) {
                             for (var i = 0; i < articles.length; i++) {
-                                console.log(like)
                                 for (var j = 0; j < like.likes.length; j++) {
                                     if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
                                         articles[i].like = like.likes[j].status;
@@ -1390,12 +1477,45 @@ exports.getTrendArticles = function(req, res) {
             });
         };
     });
+}
 
 
 
+exports.getTrendArticlesMaxLimit = function(req, res) {
 
+    var current_username = req.user.userData._id;
 
+    PreferredTag.findOne({
+        user: current_username,
+    }).lean().exec().then(function(preferredTag) {
 
+        if (!!preferredTag) {
+            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
+                return tag.tag + '';
+            });
+
+            Article.find({
+                approved: true,
+                tags: mapedPreferredTag
+            }).lean().exec().then(function(articles) {
+                articles.sort(compareArticles);
+                if (!!articles) {
+                    articles.sort(compareArticles);
+                    res.json({
+                        pagelimit: Math.ceil(articles.length / 20)
+                    })
+                } else {
+                    res.json({
+                        error: "No articles found!!!"
+                    });
+                };
+            });
+        } else {
+            res.json({
+                error: "No articles found!!!"
+            });
+        };
+    });
 }
 
 
@@ -1431,7 +1551,6 @@ exports.delCategory = function(req, res) {
 }
 
 exports.addCategory = function(req, res) {
-    console.log(req.body)
     var name = req.body.name;
     addCategory = new Category({
         name: name
@@ -1481,7 +1600,6 @@ exports.delTag = function(req, res) {
 }
 
 exports.addTag = function(req, res) {
-    console.log(req.body)
     var name = req.body.name;
     var boostValue = req.body.boostValue;
     addTag = new Tag({
@@ -1497,7 +1615,6 @@ exports.updateTag = function(req, res) {
     var query = {
         _id: req.body._id
     };
-    console.log(req.body)
     var name = req.body.name;
     var boostValue = req.body.boostValue;
     var update = {
@@ -1507,7 +1624,6 @@ exports.updateTag = function(req, res) {
     Tag.findOneAndUpdate(query, update).exec().then(function(tag) {
         res.status(200).send(tag);
     });
-    console.log('testing again');
 }
 
 
@@ -1536,7 +1652,6 @@ exports.delLocation = function(req, res) {
 }
 
 exports.addLocation = function(req, res) {
-    console.log(req.body)
     var name = req.body.name;
     addLocation = new Local({
         name: name
@@ -1573,7 +1688,7 @@ exports.singleImageUpload = function(req, res) {
         ext = path.extname(req.files.file.name).toLowerCase(),
         newFileName = '/images/uploads/' + genarateUniqueHash() + ext;
     targetPath = path.resolve('./public' + newFileName);
-    console.log(tempPath, ext, targetPath)
+    // console.log(tempPath, ext, targetPath)
     if (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif') {
         fs.rename(tempPath, targetPath, function(err) {
             if (err) {

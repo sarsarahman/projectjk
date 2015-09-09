@@ -54,7 +54,7 @@ passport.use('userlogin', new LocalStrategy({
                     if (YOUR_APP_ID == debugResponse.data.app_id && userData.id == debugResponse.data.user_id) {
 
                         var resUserData = api.userLogin(userData, function(user) {
-                            console.log(user)
+                            // console.log(user)
 
                             return done(null, {
                                 debugResponse: debugResponse,
@@ -85,9 +85,9 @@ passport.use('adminlogin', new LocalStrategy({
         passReqToCallback: true,
     },
     function(req, username, password, done) {
-        console.log(req.body)
+        // console.log(req.body)
         var resUserData = api.adminLogin(req.body, function(user) {
-            console.log(user)
+            // console.log(user)
 
             if (!!user) {
                 return done(null, user);
@@ -200,11 +200,15 @@ app.get('/logout', function(req, res) {
 app.post('/api/login',
     passport.authenticate('userlogin'),
     function(req, res) {
-        console.log(req.user);
+        // console.log(req.user);
         res.status(200).send(req.user);
 
     });
 // Mobile App API
+
+app.get('/api/searcharticles/:searchdata/:page',
+    api.getSearchArticles);
+
 app.get('/api/categoryarticles/:cat/:page',
     api.getCategoryArticles);
 
@@ -214,7 +218,27 @@ app.get('/api/recentarticles/:page',
 app.get('/api/trendarticles/:page',
     api.getTrendArticles);
 
-app.get('/api/bookmarked/:page', api.bookmarkedArticles);
+app.get('/api/bookmarked/:page',
+    api.bookmarkedArticles);
+
+
+app.get('/api/maxlimit/searcharticles/:searchdata',
+    api.getSearchArticlesMaxLimit);
+
+app.get('/api/maxlimit/categoryarticles/:cat',
+    api.getCategoryArticlesMaxLimit);
+
+app.get('/api/maxlimit/recentarticles',
+    api.getRecentArticlesMaxLimit);
+
+app.get('/api/maxlimit/trendarticles',
+    api.getTrendArticlesMaxLimit);
+
+app.get('/api/maxlimit/bookmarked',
+    api.bookmarkedArticlesMaxLimit);
+
+
+
 
 app.get('/api/like/:id', api.likeArticle);
 app.get('/api/dislike/:id', api.dislikeArticle);
