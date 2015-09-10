@@ -11,6 +11,8 @@ var request = require('request'),
     https = require('https'),
     expressSession = require('express-session');
 
+var deepPopulate = require('mongoose-deep-populate')(mongoose);
+
 
 
 
@@ -190,6 +192,25 @@ AdminUser = mongoose.model('AdminUser', adminUserSchema);
 Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
+
+
+
+// articleSchema.plugin(deepPopulate, {
+//     populate: {
+//         'tags': {
+//             select: 'name'
+//         },
+//         'location': {
+//             select: 'name'
+//         },
+//         'category': {
+//             select: 'name'
+//         },
+//         '_feed': {
+//             select: 'name'
+//         }
+//     }
+// });
 
 
 
@@ -686,27 +707,62 @@ exports.bookmarkedArticles = function(req, res) {
         date: -1
     }).skip(page * paginate).limit(paginate).populate('articles').lean().exec().then(function(bookmarks) {
 
+
+
         if (!!bookmarks) {
-            var articles = [];
-            articles = bookmarks.articles;
-            Like.findOne({
-                user: req.user.userData._id,
-            }).lean().exec().then(function(like) {
-                if (!!like) {
-                    // console.log('yes likes', articles.length)
-                    for (var i = 0; i < articles.length; i++) {
-                        // console.log(like)
-                        articles[i].bookmark = true;
-                        for (var j = 0; j < like.likes.length; j++) {
-                            // console.log('wow', like.likes[j].article, articles[i]._id)
-                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                articles[i].like = like.likes[j].status;
+
+            var opts = [{
+                path: 'tags',
+                select: 'Tag'
+            }, {
+                path: 'category',
+                model: 'Category'
+            }, {
+                path: 'location',
+                model: 'Location'
+            }, {
+                path: '_feed',
+                model: 'Feed',
+                select: 'name'
+            }];
+
+
+            Article.populate(bookmarks.articles, opts,
+                function(err, articles) {
+                    // console.log("User List data: %j", doc);
+                    // cb(null, doc);
+
+                    // res.json(articles);
+
+
+
+
+                    // var articles = [];
+                    // articles = bookmarks.articles;
+                    Like.findOne({
+                        user: req.user.userData._id,
+                    }).lean().exec().then(function(like) {
+                        if (!!like) {
+                            // console.log('yes likes', articles.length)
+                            for (var i = 0; i < articles.length; i++) {
+                                // console.log(like)
+                                articles[i].bookmark = true;
+
+
+                                for (var j = 0; j < like.likes.length; j++) {
+                                    // console.log('wow', like.likes[j].article, articles[i]._id)
+                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
+                                        articles[i].like = like.likes[j].status;
+
+                                    };
+                                };
+
+
                             };
-                        };
-                    };
-                }
-                res.json(bookmarks.articles);
-            });
+                        }
+                        res.json(bookmarks.articles);
+                    });
+                });
         } else {
             res.json({
                 error: err
@@ -1170,7 +1226,7 @@ exports.getSearchArticles = function(req, res) {
 
     }).sort({
         date: -1
-    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+    }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         articles.sort(compareArticles);
         Bookmark.findOne({
             user: req.user.userData._id
@@ -1258,7 +1314,7 @@ exports.getCategoryArticles = function(req, res) {
                 category: cat._id
             }).sort({
                 date: -1
-            }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+            }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
                 articles.sort(compareArticles);
                 Bookmark.findOne({
@@ -1352,7 +1408,7 @@ exports.getRecentArticles = function(req, res) {
         approved: true,
     }).sort({
         date: -1
-    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+    }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         articles.sort(compareArticles);
         Bookmark.findOne({
             user: req.user.userData._id
@@ -1435,7 +1491,7 @@ exports.getTrendArticles = function(req, res) {
                 tags: mapedPreferredTag
             }).sort({
                 date: -1
-            }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+            }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
                 articles.sort(compareArticles);
                 Bookmark.findOne({
                     user: req.user.userData._id
