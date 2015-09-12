@@ -8,6 +8,7 @@ var request = require('request'),
     fs = require('fs'),
     crypto = require('crypto'),
     http = require('http'),
+    path = require('path'),
     https = require('https'),
     expressSession = require('express-session');
 
