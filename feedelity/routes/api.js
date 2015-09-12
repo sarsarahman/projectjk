@@ -445,10 +445,11 @@ exports.likeArticle = function(req, res) {
                     if (pos > -1) {
                         if (likes[pos].status == true) {
                             likes.splice(pos, 1);
+                            tempRes = '';
                         } else {
                             likes[pos].status = !likes[pos].status;
+                            tempRes = false;
                         };
-                        tempRes = false;
                     } else {
                         likes.push({
                             article: current_article,
@@ -521,7 +522,7 @@ exports.dislikeArticle = function(req, res) {
                         status: false
                     });
 
-                    tempRes = true;
+                    tempRes = false;
 
                 } else {
                     var likes = like.likes;
@@ -536,17 +537,18 @@ exports.dislikeArticle = function(req, res) {
                         if (likes[pos].status == false) {
 
                             likes.splice(pos, 1);
+                            tempRes = '';
                         } else {
                             likes[pos].status = !likes[pos].status;
+                            tempRes = true;
                         };
 
-                        tempRes = false;
                     } else {
                         likes.push({
                             article: current_article,
                             status: false
                         });
-                        tempRes = true;
+                        tempRes = false;
 
                     };
                 };
@@ -570,7 +572,7 @@ exports.dislikeArticle = function(req, res) {
                         status: false
                     }]
                 });
-                tempRes = true;
+                tempRes = false;
 
                 like.save(function(err) {
                     if (err) {
