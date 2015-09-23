@@ -105,8 +105,18 @@ var articleSchema = mongoose.Schema({
     approved: Boolean,
     starred: Boolean,
     imgUrl: String,
-    likes: Number,
-    dislikes: Number,
+    bookmarks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    dislikes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     tags: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Tag'
@@ -194,27 +204,6 @@ Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
 
-
-
-// articleSchema.plugin(deepPopulate, {
-//     populate: {
-//         'tags': {
-//             select: 'name'
-//         },
-//         'location': {
-//             select: 'name'
-//         },
-//         'category': {
-//             select: 'name'
-//         },
-//         '_feed': {
-//             select: 'name'
-//         }
-//     }
-// });
-
-
-
 exports.userLogin = function(userData, callback) {
 
 
@@ -253,13 +242,9 @@ exports.fetchUsers = function(req, res) {
 
     var paginate = 20;
     var page = req.params.page;
-    // var page = 0;
-
-
     User.find().sort({
         date: -1
     }).skip(page * paginate).limit(paginate).exec().then(function(users) {
-        // console.log(users)
         res.json(users);
     });
 
@@ -417,175 +402,114 @@ exports.likeArticle = function(req, res) {
 
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
-    var tempRes = false;
 
-    Article.findOneAndUpdate({
+    console.log(current_article, current_username)
+
+    Article.findOne({
         _id: current_article
-    }, {
-        $inc: {
-            likes: 1
-        }
-    }).exec().then(function(article) {
-        Like.findOne({
-            user: current_username,
-        }).lean().exec().then(function(like) {
-            if (!!like) {
-                if (like.likes.length < 1) {
-                    like.likes.push({
-                        article: current_article,
-                        status: true
-                    });
-                    tempRes = true;
-                } else {
-                    var likes = like.likes;
-                    var mapedLikes = like.likes.map(function(likes) {
-                        return likes.article + '';
-                    });
-                    var pos = mapedLikes.indexOf(current_article);
-                    if (pos > -1) {
-                        if (likes[pos].status == true) {
-                            likes.splice(pos, 1);
-                            tempRes = '';
-                        } else {
-                            likes[pos].status = !likes[pos].status;
-                            tempRes = false;
-                        };
-                    } else {
-                        likes.push({
-                            article: current_article,
-                            status: true
-                        });
-                        tempRes = true;
-                    };
-                };
+    }).lean().exec().then(function(article) {
 
-                Like.findOneAndUpdate({
-                    user: current_username
-                }, {
-                    likes: like.likes
-                }, {
-                    upsert: true
-                }).exec().then(function(updatedlike) {
-                    res.status(200).send({
-                        status: tempRes
-                    });
-                });
+        if (!!article) {
+            article.likes = article.likes.map(function(like) {
+                return like + ''
+            });
+            var pos = article.likes.indexOf(current_username);
+
+            if (pos > -1) {
+                article.likes.splice(pos, 1);
             } else {
-                like = new Like({
-                    user: current_username,
-                    likes: [{
-                        article: current_article,
-                        status: true
-                    }]
-                });
-
-                tempRes = true;
-                like.save(function(err) {
-                    if (err) {
-                        console.error({
-                            error: error
-                        });
-                    }
-                    res.status(200).send({
-                        status: tempRes
-                    });
-                });
-
-
+                article.likes.push(current_username);
             };
 
+            article.dislikes = article.dislikes.map(function(dislike) {
+                return dislike + ''
+            });
+            pos = article.dislikes.indexOf(current_username);
+            if (pos > -1) {
+                article.dislikes.splice(pos, 1);
+            };
 
+            delete article._id;
 
-        });
+            Article.findOneAndUpdate({
+                _id: current_article
+            }, article).exec().then(function(updatedarticle) {
+                var pos = updatedarticle.likes.indexOf(current_username);
+                // console.log(article, updatedarticle)
+                if (pos > -1) {
+                    res.status(200).send({
+                        like: true,
+                        likes: updatedarticle.likes.length
+                    });
+                } else {
+                    res.status(200).send({
+                        like: false,
+                        likes: updatedarticle.likes.length
+                    });
+                };
+            });
+
+        };
     });
 }
 
 exports.dislikeArticle = function(req, res) {
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
-    var tempRes = false;
-    Article.findOneAndUpdate({
+
+    Article.findOne({
         _id: current_article
-    }, {
-        $inc: {
-            dislikes: 1
-        }
-    }).exec().then(function(article) {
-        Like.findOne({
-            user: current_username,
-        }).lean().exec().then(function(like) {
-            if (!!like) {
-                if (like.likes.length < 1) {
+    }).lean().exec().then(function(article) {
 
-                    like.likes.push({
-                        article: current_article,
-                        status: false
-                    });
+        if (!!article) {
+            article.dislikes = article.dislikes.map(function(dislike) {
+                return dislike + ''
+            });
 
-                    tempRes = false;
+            var pos = article.dislikes.indexOf(current_username);
 
-                } else {
-                    var likes = like.likes;
-                    var mapedLikes = like.likes.map(function(likes) {
-                        return likes.article + '';
-                    });
-                    var pos = mapedLikes.indexOf(current_article);
+            console.log(pos)
 
-
-
-                    if (pos > -1) {
-                        if (likes[pos].status == false) {
-
-                            likes.splice(pos, 1);
-                            tempRes = '';
-                        } else {
-                            likes[pos].status = !likes[pos].status;
-                            tempRes = true;
-                        };
-
-                    } else {
-                        likes.push({
-                            article: current_article,
-                            status: false
-                        });
-                        tempRes = false;
-
-                    };
-                };
-
-                Like.findOneAndUpdate({
-                    user: current_username
-                }, {
-                    likes: like.likes
-                }, {
-                    upsert: true
-                }).exec().then(function(updatedlike) {
-                    res.status(200).send({
-                        status: tempRes
-                    });
-                });
+            if (pos > -1) {
+                article.dislikes.splice(pos, 1);
             } else {
-                like = new Like({
-                    user: current_username,
-                    likes: [{
-                        article: current_article,
-                        status: false
-                    }]
-                });
-                tempRes = false;
-
-                like.save(function(err) {
-                    if (err) {
-                        console.error({
-                            error: err
-                        });
-                    }
-                    res.status(200).send({
-                        status: tempRes
-                    });
-                });
+                article.dislikes.push(current_username);
             };
-        });
+
+            article.likes = article.likes.map(function(like) {
+                return like + ''
+            });
+
+            pos = article.likes.indexOf(current_username);
+
+            if (pos > -1) {
+                article.likes.splice(pos, 1);
+            };
+
+            delete article._id;
+            console.log(article)
+
+            Article.findOneAndUpdate({
+                _id: current_article
+            }, article).exec().then(function(updatedarticle) {
+                var pos = updatedarticle.dislikes.indexOf(current_username);
+                if (pos > -1) {
+                    res.status(200).send({
+                        dislike: true,
+                        dislikes: updatedarticle.dislikes.length
+                    });
+                } else {
+                    res.status(200).send({
+                        dislike: false,
+                        dislikes: updatedarticle.dislikes.length
+                    });
+                };
+            });
+
+        };
+
+
+
     });
 
 }
@@ -594,42 +518,31 @@ exports.dislikeArticle = function(req, res) {
 
 
 exports.likedArticles = function(req, res) {
-
     var current_username = req.user.userData._id;
-
-    Like.find({
-        user: current_username,
-        'likes.status': true
-    }).populate('article').exec().then(function(err, likes) {
-        if (err) {
-            res.status(200).send({
-                error: 'error'
-            })
-        } else {
-            res.status(200).send(likes);
+    Article.find({
+        likes: [current_username]
+    }).lean().exec().then(function(articles) {
+        if (!!articles) {
+            articles.sort(compareArticles);
+            articles = processRawArticles(articles, current_username);
+            console.log(articles)
+            res.status(200).send(articles);
         };
     });
-
 }
 
 
 exports.dislikedArticles = function(req, res) {
-
     var current_username = req.user.userData._id;
-
-    Like.find({
-        user: current_username,
-        'likes.status': true
-    }).populate('article').exec().then(function(err, likes) {
-        if (err) {
-            res.status(200).send({
-                error: 'error'
-            })
-        } else {
-            res.status(200).send(likes);
+    Article.find({
+        dislikes: [current_username]
+    }).lean().exec().then(function(articles) {
+        if (!!articles) {
+            articles.sort(compareArticles);
+            articles = processRawArticles(articles, current_username);
+            res.status(200).send(articles);
         };
     });
-
 }
 
 
@@ -645,52 +558,43 @@ exports.dislikedArticles = function(req, res) {
 //Bookmark functions
 
 exports.bookmarkArticle = function(req, res) {
+
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
 
-    var query = {
-        user: current_username,
-    };
+    Article.findOne({
+        _id: current_article
+    }).lean().exec().then(function(article) {
+        if (!!article) {
+            article.bookmarks = article.bookmarks.map(function(bookmark) {
+                return bookmark + ''
+            });
 
-    var update = {};
-
-    Bookmark.findOne(query).exec().then(function(bookmark) {
-        var tempRes;
-        if (!!bookmark) {
-
-            var pos = bookmark.articles.indexOf(current_article);
-
+            var pos = article.bookmarks.indexOf(current_username);
             if (pos > -1) {
-                bookmark.articles.splice(pos, 1);
-
-                tempRes = false;
-
+                article.bookmarks.splice(pos, 1);
             } else {
-                bookmark.articles.push(current_article);
-                tempRes = true;
+                article.bookmarks.push(current_username);
             };
 
-            update = {
-                articles: bookmark.articles
-            }
 
-        } else {
-            update = {
-                articles: [current_article]
-            }
-            tempRes = true;
+            delete article._id;
 
-        };
-
-        var options = {
-            upsert: true
-        };
-
-        Bookmark.findOneAndUpdate(query, update, options).exec().then(function(updated_bookmark) {
-            res.status(200).send({
-                status: tempRes
+            Article.findOneAndUpdate({
+                _id: current_article
+            }, article).exec().then(function(updatedarticle) {
+                var pos = article.bookmarks.indexOf(current_username);
+                if (pos > -1) {
+                    res.status(200).send({
+                        bookmark: true,
+                    });
+                } else {
+                    res.status(200).send({
+                        bookmark: false
+                    });
+                };
             });
-        });
+        };
     });
 }
 
@@ -699,77 +603,14 @@ exports.bookmarkArticle = function(req, res) {
 
 
 exports.bookmarkedArticles = function(req, res) {
-
     var current_username = req.user.userData._id;
-    var paginate = 20;
-    var page = req.params.page;
-
-    Bookmark.findOne({
-        user: current_username,
-    }).sort({
-        date: -1
-    }).skip(page * paginate).limit(paginate).populate('articles').lean().exec().then(function(bookmarks) {
-
-
-
-        if (!!bookmarks) {
-
-            var opts = [{
-                path: 'tags',
-                select: 'Tag'
-            }, {
-                path: 'category',
-                model: 'Category'
-            }, {
-                path: 'location',
-                model: 'Location'
-            }, {
-                path: '_feed',
-                model: 'Feed',
-                select: 'name'
-            }];
-
-
-            Article.populate(bookmarks.articles, opts,
-                function(err, articles) {
-                    // console.log("User List data: %j", doc);
-                    // cb(null, doc);
-
-                    // res.json(articles);
-
-
-
-
-                    // var articles = [];
-                    // articles = bookmarks.articles;
-                    Like.findOne({
-                        user: req.user.userData._id,
-                    }).lean().exec().then(function(like) {
-                        if (!!like) {
-                            // console.log('yes likes', articles.length)
-                            for (var i = 0; i < articles.length; i++) {
-                                // console.log(like)
-                                articles[i].bookmark = true;
-
-
-                                for (var j = 0; j < like.likes.length; j++) {
-                                    // console.log('wow', like.likes[j].article, articles[i]._id)
-                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                        articles[i].like = like.likes[j].status;
-
-                                    };
-                                };
-
-
-                            };
-                        }
-                        res.json(bookmarks.articles);
-                    });
-                });
-        } else {
-            res.json({
-                error: err
-            })
+    Article.find({
+        bookmarks: [current_username]
+    }).lean().exec().then(function(articles) {
+        if (!!articles) {
+            articles.sort(compareArticles);
+            articles = processRawArticles(articles, current_username);
+            res.status(200).send(articles);
         };
     });
 }
@@ -778,27 +619,20 @@ exports.bookmarkedArticles = function(req, res) {
 ///MaxLimit
 exports.bookmarkedArticlesMaxLimit = function(req, res) {
     var current_username = req.user.userData._id;
-    Bookmark.findOne({
-        user: current_username,
-    }).lean().exec().then(function(bookmarks) {
-
-        if (!!bookmarks) {
-            var articles = [];
-            articles = bookmarks.articles;
+    Article.find({
+        bookmarks: [current_username]
+    }).exec().then(function(articles) {
+        if (!!articles) {
             res.json({
                 pagelimit: Math.ceil(articles.length / 20)
             })
         } else {
             res.json({
                 error: 'No articles found!!!'
-            })
-        };
+            });
+        }
     });
 }
-
-
-
-
 
 
 
@@ -972,8 +806,6 @@ exports.getPendingArticles = function(req, res) {
     var paginate = 20;
     var page = req.params.page;
     // var page = 0;
-
-
     Article.find({
         approved: false
     }).sort({
@@ -994,6 +826,8 @@ exports.getApprovedArticles = function(req, res) {
         date: -1
     }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
         articles.sort(compareArticles);
+
+
         res.json(articles);
     });
 }
@@ -1002,8 +836,6 @@ exports.getStarredArticles = function(req, res) {
 
     var paginate = 20;
     var page = req.params.page;
-
-
     Article.find({
         starred: true
     }).sort({
@@ -1060,32 +892,14 @@ exports.addArticle = function(req, res) {
         author: req.body.author,
         link: req.body.link,
         guid: req.body.guid,
-        likes: 0,
-        dislikes: 0
+        likes: [],
+        dislikes: [],
+        bookmarks: []
     });
     Article.create(addArticle).then(function(addArticle) {
         res.status(200).send(addArticle);
     });
 }
-
-// exports.updateArticle = function(req, res) {
-//     var query = {
-//         _id: req.body._id
-//     };
-//     var update = {
-//         name: req.body.name,
-//         title: req.body.title,
-//         summary: req.body.summary,
-//         description: req.body.description,
-//         author: req.body.author,
-//         link: req.body.link,
-//         guid: req.body.guid,        
-//     }
-//     Feed.findOneAndUpdate(query, update).exec().then(function(feed) {
-//         res.status(200).send(feed);
-//     });
-// }
-
 
 exports.updateArticle = function(req, res) {
 
@@ -1172,6 +986,53 @@ function compareArticles(a1, a2) {
     return new Date(a2.date).getTime() - new Date(a1.date).getTime();
 }
 
+function processRawArticles(articles, username) {
+
+
+    articles.map(function(article) {
+        var like = false;
+        var dislike = false;
+        var bookmark = false;
+
+
+        article.likes = article.likes.map(function(like) {
+            return like + ''
+        });
+
+        article.dislikes = article.dislikes.map(function(dislike) {
+            return dislike + ''
+        });
+
+        article.bookmarks = article.bookmarks.map(function(bookmark) {
+            return bookmark + ''
+        });
+
+
+        if (article.likes.indexOf(username) > -1) {
+            like = true;
+        };
+
+        if (article.dislikes.indexOf(username) > -1) {
+            dislike = true;
+        };
+
+        if (article.bookmarks.indexOf(username) > -1) {
+            bookmark = true;
+        };
+
+        article.like = like;
+        article.dislike = dislike;
+        article.bookmark = bookmark;
+
+        article.likes = article.likes.length;
+        article.dislikes = article.dislikes.length;
+        delete article.bookmarks;
+        return article;
+    });
+
+    return articles;
+}
+
 function extractArticle(item, feed) {
 
     var categoryId = '';
@@ -1231,38 +1092,8 @@ exports.getSearchArticles = function(req, res) {
         date: -1
     }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         articles.sort(compareArticles);
-        Bookmark.findOne({
-            user: req.user.userData._id
-        }).exec().then(function(bookmark) {
-            if (!!bookmark) {
-                for (var i = 0; i < articles.length; i++) {
-
-                    if (bookmark.articles.indexOf(articles[i]._id) > -1) {
-                        articles[i]['bookmark'] = true;
-                    } else {
-                        articles[i]['bookmark'] = false;
-                    };
-                };
-            } else {
-                for (var i = 0; i < articles.length; i++) {
-                    articles[i].bookmark = false;
-                };
-            };
-            Like.findOne({
-                user: req.user.userData._id,
-            }).lean().exec().then(function(like) {
-                if (!!like) {
-                    for (var i = 0; i < articles.length; i++) {
-                        for (var j = 0; j < like.likes.length; j++) {
-                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                articles[i].like = like.likes[j].status;
-                            };
-                        };
-                    };
-                }
-                res.json(articles);
-            });
-        });
+        articles = processRawArticles(articles, current_username);
+        res.json(articles);
     });
 }
 
@@ -1282,8 +1113,6 @@ exports.getSearchArticlesMaxLimit = function(req, res) {
         }]
 
     }).lean().exec().then(function(articles) {
-        articles.sort(compareArticles);
-
         if (!!articles) {
             articles.sort(compareArticles);
             res.json({
@@ -1305,6 +1134,7 @@ exports.getCategoryArticles = function(req, res) {
     var paginate = 20;
     var page = req.params.page;
     var reqCategory = req.params.cat;
+    var current_username = req.user.userData._id;
 
 
     Category.findOne({
@@ -1318,42 +1148,9 @@ exports.getCategoryArticles = function(req, res) {
             }).sort({
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
-
                 articles.sort(compareArticles);
-                Bookmark.findOne({
-                    user: req.user.userData._id
-                }).exec().then(function(bookmark) {
-                    if (!!bookmark) {
-                        for (var i = 0; i < articles.length; i++) {
-                            if (bookmark.articles.indexOf(articles[i]._id) > -1) {
-                                articles[i]['bookmark'] = true;
-                            } else {
-                                articles[i]['bookmark'] = false;
-                            };
-                        };
-
-                    } else {
-                        for (var i = 0; i < articles.length; i++) {
-                            articles[i].bookmark = false;
-                        };
-                    };
-
-                    Like.findOne({
-                        user: req.user.userData._id,
-                    }).lean().exec().then(function(like) {
-                        if (!!like) {
-                            for (var i = 0; i < articles.length; i++) {
-                                for (var j = 0; j < like.likes.length; j++) {
-                                    // console.log('wow', like.likes[j].article, articles[i]._id)
-                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                        articles[i].like = like.likes[j].status;
-                                    };
-                                };
-                            };
-                        }
-                        res.json(articles);
-                    });
-                });
+                articles = processRawArticles(articles, current_username);
+                res.json(articles);
             });
         } else {
             res.json({
@@ -1413,38 +1210,9 @@ exports.getRecentArticles = function(req, res) {
         date: -1
     }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         articles.sort(compareArticles);
-        Bookmark.findOne({
-            user: req.user.userData._id
-        }).exec().then(function(bookmark) {
-            if (!!bookmark) {
-                for (var i = 0; i < articles.length; i++) {
+        articles = processRawArticles(articles, current_username);
+        res.json(articles);
 
-                    if (bookmark.articles.indexOf(articles[i]._id) > -1) {
-                        articles[i]['bookmark'] = true;
-                    } else {
-                        articles[i]['bookmark'] = false;
-                    };
-                };
-            } else {
-                for (var i = 0; i < articles.length; i++) {
-                    articles[i].bookmark = false;
-                };
-            };
-            Like.findOne({
-                user: req.user.userData._id,
-            }).lean().exec().then(function(like) {
-                if (!!like) {
-                    for (var i = 0; i < articles.length; i++) {
-                        for (var j = 0; j < like.likes.length; j++) {
-                            if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                articles[i].like = like.likes[j].status;
-                            };
-                        };
-                    };
-                }
-                res.json(articles);
-            });
-        });
     });
 
 
@@ -1455,8 +1223,6 @@ exports.getRecentArticlesMaxLimit = function(req, res) {
     Article.find({
         approved: true,
     }).lean().exec().then(function(articles) {
-        articles.sort(compareArticles);
-
         if (!!articles) {
             articles.sort(compareArticles);
             res.json({
@@ -1496,38 +1262,8 @@ exports.getTrendArticles = function(req, res) {
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
                 articles.sort(compareArticles);
-                Bookmark.findOne({
-                    user: req.user.userData._id
-                }).exec().then(function(bookmark) {
-                    if (!!bookmark) {
-                        for (var i = 0; i < articles.length; i++) {
-
-                            if (bookmark.articles.indexOf(articles[i]._id) > -1) {
-                                articles[i]['bookmark'] = true;
-                            } else {
-                                articles[i]['bookmark'] = false;
-                            };
-                        };
-                    } else {
-                        for (var i = 0; i < articles.length; i++) {
-                            articles[i].bookmark = false;
-                        };
-                    };
-                    Like.findOne({
-                        user: req.user.userData._id,
-                    }).lean().exec().then(function(like) {
-                        if (!!like) {
-                            for (var i = 0; i < articles.length; i++) {
-                                for (var j = 0; j < like.likes.length; j++) {
-                                    if (JSON.stringify(like.likes[j].article) == JSON.stringify(articles[i]._id)) {
-                                        articles[i].like = like.likes[j].status;
-                                    };
-                                };
-                            };
-                        }
-                        res.json(articles);
-                    });
-                });
+                articles = processRawArticles(articles, current_username);
+                res.json(articles);
             });
 
         } else {

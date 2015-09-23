@@ -103,22 +103,29 @@ passport.use('adminlogin', new LocalStrategy({
 
     }));
 
-
-
-
-
 function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {}
-    res.json({
-        error: "Not Authenticated!!!"
-    });
+    if (req.isAuthenticated()) {
+        if (req.user.role = 'user') {
+            return next();
+        } else {
+            res.json({
+                error: "Not Authenticated!!!"
+            });
+        }
+    } else {
+        res.json({
+            error: "Not Authenticated!!!"
+        });
+    }
 }
-
-
 
 function ensureAdminAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
-        return next();
+        if (req.user.role = 'admin') {
+            return next();
+        } else {
+            res.redirect('/login');
+        }
     } else {
         res.redirect('/login');
     }
