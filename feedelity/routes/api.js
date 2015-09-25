@@ -439,12 +439,16 @@ exports.likeArticle = function(req, res) {
                 if (pos > -1) {
                     res.status(200).send({
                         like: true,
-                        likes: updatedarticle.likes.length
+                        likes: updatedarticle.likes.length,
+                        dislike: false,
+                        dislikes: updatedarticle.dislikes.length,
                     });
                 } else {
                     res.status(200).send({
                         like: false,
-                        likes: updatedarticle.likes.length
+                        likes: updatedarticle.likes.length,
+                        dislike: false,
+                        dislikes: updatedarticle.dislikes.length,
                     });
                 };
             });
@@ -496,12 +500,16 @@ exports.dislikeArticle = function(req, res) {
                 if (pos > -1) {
                     res.status(200).send({
                         dislike: true,
-                        dislikes: updatedarticle.dislikes.length
+                        dislikes: updatedarticle.dislikes.length,
+                        like: false,
+                        likes: updatedarticle.likes.length,
                     });
                 } else {
                     res.status(200).send({
                         dislike: false,
-                        dislikes: updatedarticle.dislikes.length
+                        dislikes: updatedarticle.dislikes.length,
+                        like: false,
+                        likes: updatedarticle.likes.length,
                     });
                 };
             });
@@ -1200,9 +1208,12 @@ exports.getCategoryArticlesMaxLimit = function(req, res) {
 
 
 exports.getRecentArticles = function(req, res) {
+    console.log('yes')
 
     var paginate = 20;
     var page = req.params.page;
+    var current_username = req.user.userData._id;
+    
 
     Article.find({
         approved: true,
@@ -1224,7 +1235,6 @@ exports.getRecentArticlesMaxLimit = function(req, res) {
         approved: true,
     }).lean().exec().then(function(articles) {
         if (!!articles) {
-            articles.sort(compareArticles);
             res.json({
                 pagelimit: Math.ceil(articles.length / 20)
             })
@@ -1293,9 +1303,7 @@ exports.getTrendArticlesMaxLimit = function(req, res) {
                 approved: true,
                 tags: mapedPreferredTag
             }).lean().exec().then(function(articles) {
-                articles.sort(compareArticles);
                 if (!!articles) {
-                    articles.sort(compareArticles);
                     res.json({
                         pagelimit: Math.ceil(articles.length / 20)
                     })
