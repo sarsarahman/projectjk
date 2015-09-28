@@ -529,7 +529,7 @@ exports.likedArticles = function(req, res) {
     var current_username = req.user.userData._id;
     Article.find({
         likes: [current_username]
-    }).lean().exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         if (!!articles) {
             articles.sort(compareArticles);
             articles = processRawArticles(articles, current_username);
@@ -544,7 +544,7 @@ exports.dislikedArticles = function(req, res) {
     var current_username = req.user.userData._id;
     Article.find({
         dislikes: [current_username]
-    }).lean().exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         if (!!articles) {
             articles.sort(compareArticles);
             articles = processRawArticles(articles, current_username);
@@ -614,7 +614,7 @@ exports.bookmarkedArticles = function(req, res) {
     var current_username = req.user.userData._id;
     Article.find({
         bookmarks: [current_username]
-    }).lean().exec().then(function(articles) {
+    }).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
         if (!!articles) {
             articles.sort(compareArticles);
             articles = processRawArticles(articles, current_username);
@@ -1213,7 +1213,7 @@ exports.getRecentArticles = function(req, res) {
     var paginate = 20;
     var page = req.params.page;
     var current_username = req.user.userData._id;
-    
+
 
     Article.find({
         approved: true,

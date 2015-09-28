@@ -180,8 +180,8 @@ if (app.get('env') === 'production') {
 
 // Routes
 app.get('/', ensureAdminAuthenticated, routes.index);
-app.get('/partial/:name', routes.partial);
 
+app.get('/partial/:name', routes.partial);
 
 app.get('/login', routes.login);
 
@@ -195,13 +195,10 @@ app.post('/login',
 
     });
 
-
 app.get('/logout', function(req, res) {
     req.logout();
     res.redirect('/');
 });
-
-
 
 // Login
 app.post('/api/login',
@@ -211,8 +208,8 @@ app.post('/api/login',
         res.status(200).send(req.user);
 
     });
-// Mobile App API
 
+// Mobile App API
 app.get('/api/searcharticles/:searchdata/:page',
     api.getSearchArticles);
 
