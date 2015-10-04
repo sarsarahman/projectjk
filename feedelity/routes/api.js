@@ -179,11 +179,8 @@ var preferredTagSchema = mongoose.Schema({
         ref: 'User'
     },
     tags: [{
-        tag: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Tag'
-        },
-        value: Number
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tag'
     }]
 });
 
@@ -294,74 +291,25 @@ exports.adminLogin = function(userData, callback) {
 
 exports.updatePreferredTag = function(req, res) {
     var sellectedTags = req.body;
-    var current_username = req.user.userData._id;
-    PreferredTag.findOne({
-        user: current_username,
-    }).lean().exec().then(function(preferredTag) {
-
-        if (!!preferredTag) {
-
-            if (preferredTag.tags.length < 1) {
-
-                for (var i = 0; i < sellectedTags.length; i++) {
-                    preferredTag.tags.push({
-                        tag: sellectedTags[i],
-                        value: 1
-                    });
-                };
-
-            } else {
-                for (var i = 0; i < preferredTag.tags.length; i++) {
-                    var pos = sellectedTags.indexOf(preferredTag.tags[i].tag);
-                    if (pos > -1) {
-                        sellectedTags.splice(pos, 1);
-                    } else {
-                        preferredTag.tags.splice(i, 1);
-                    };
-                };
-
-                for (var i = 0; i < sellectedTags.length; i++) {
-                    preferredTag.tags.push({
-                        tag: sellectedTags[i],
-                        value: 1
-                    });
-                };
-            };
-
-            PreferredTag.findOneAndUpdate({
-                user: current_username
-            }, {
-                tags: preferredTag.tags
-            }, {
-                upsert: true
-            }).exec().then(function(updatedPreferredTag) {
-                res.status(200).send({
-                    status: true
-                });
-            });
-        } else {
-            var preferredTag = new PreferredTag({
-                user: current_username,
-                tags: []
-            });
-            for (var i = 0; i < sellectedTags.length; i++) {
-                preferredTag.tags.push({
-                    tag: sellectedTags[i],
-                    value: 1
-                });
-            };
-            preferredTag.save(function(err) {
-                if (err) {
-                    console.error({
-                        error: error
-                    });
-                }
-                res.status(200).send({
-                    status: true
-                });
-            });
-        };
+    sellectedTags = sellectedTags.map(function(tag) {
+        return tag._id;
     });
+    var current_username = req.user.userData._id;
+    console.log('test', sellectedTags);
+    PreferredTag.findOneAndUpdate({
+        user: current_username
+    }, {
+        user: current_username,
+        tags: sellectedTags
+    }, {
+        upsert: true
+    }).lean().exec().then(function(updatedPreferredTag) {
+        console.log(updatedPreferredTag);
+        res.status(200).send({
+            status: true
+        });
+    });
+
 }
 
 
@@ -371,21 +319,10 @@ exports.getPreferredTag = function(req, res) {
     var current_username = req.user.userData._id;
     PreferredTag.findOne({
         user: current_username,
-    }).lean().exec().then(function(preferredTag) {
+    }).lean().populate('tags', 'name').exec().then(function(preferredTag) {
 
         if (!!preferredTag) {
-            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
-                return tag.tag + '';
-            });
-            if (mapedPreferredTag.length > 0) {
-                res.status(200).send({
-                    tags: mapedPreferredTag
-                });
-            } else {
-                res.status(200).send({
-                    error: 'no tags preffered'
-                });
-            };
+            res.status(200).send(preferredTag.tags);
         } else {
             res.status(200).send({
                 error: 'no tags preffered'
@@ -1085,6 +1022,7 @@ exports.getSearchArticles = function(req, res) {
     var searchdata = req.params.searchdata;
     var paginate = 20;
     var page = req.params.page;
+    var current_username = req.user.userData._id;
 
     Article.find({
         approved: true,
@@ -1099,8 +1037,10 @@ exports.getSearchArticles = function(req, res) {
     }).sort({
         date: -1
     }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+
         articles.sort(compareArticles);
         articles = processRawArticles(articles, current_username);
+
         res.json(articles);
     });
 }
@@ -1261,13 +1201,10 @@ exports.getTrendArticles = function(req, res) {
     }).lean().exec().then(function(preferredTag) {
 
         if (!!preferredTag) {
-            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
-                return tag.tag + '';
-            });
 
             Article.find({
                 approved: true,
-                tags: mapedPreferredTag
+                tags: preferredTag.tags
             }).sort({
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
@@ -1389,6 +1326,15 @@ exports.getTag = function(req, res) {
 
 exports.getTags = function(req, res) {
     Tag.find().exec().then(function(tags) {
+        res.json(tags);
+    });
+}
+
+exports.getAllTags = function(req, res) {
+    Tag.find().lean().exec().then(function(tags) {
+        tags.map(function(tag) {
+            delete tag.boostValue;
+        });
         res.json(tags);
     });
 }

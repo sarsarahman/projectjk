@@ -249,6 +249,7 @@ app.get('/api/dislike/:id', api.dislikeArticle);
 app.get('/api/bookmark/:id', api.bookmarkArticle);
 
 app.get('/api/preferredtags', api.getPreferredTag);
+app.get('/api/alltags', api.getAllTags);
 app.post('/api/preferredtags', api.updatePreferredTag);
 
 app.get('/api/liked', api.likedArticles);
