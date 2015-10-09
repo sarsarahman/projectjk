@@ -72,7 +72,10 @@ var userSchema = mongoose.Schema({
     relationshipStatus: String,
     birthday: Date,
     mobileNumber: String,
-    location: String,
+    location: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location'
+    },
     userFbLikes: [String],
     dp: String,
     status: Boolean
@@ -233,6 +236,30 @@ exports.userLogin = function(userData, callback) {
     });
 
 }
+
+
+exports.updateUserLocation = function(req, res) {
+
+    var current_username = req.user.userData._id;
+    var current_location = req.body._id;
+
+    var update = {
+        location: current_location,
+    };
+
+    User.findOneAndUpdate({
+        _id: current_username
+    }, update, {
+        upsert: false
+    }).lean().exec().then(function(user) {
+        res.json({
+            status: "success"
+        });
+    });
+
+}
+
+
 
 
 exports.fetchUsers = function(req, res) {
