@@ -1228,6 +1228,7 @@ exports.getTrendArticles = function(req, res) {
     }).lean().exec().then(function(preferredTag) {
 
         if (!!preferredTag) {
+            console.log(preferredTag.tags)
 
             Article.find({
                 approved: true,
