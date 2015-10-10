@@ -1232,7 +1232,7 @@ exports.getTrendArticles = function(req, res) {
 
             Article.find({
                 approved: true,
-                tags: preferredTag.tags
+                // tags: preferredTag.tags
             }).sort({
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
