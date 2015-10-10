@@ -1226,9 +1226,9 @@ exports.getTrendArticles = function(req, res) {
     PreferredTag.findOne({
         user: current_username,
     }).lean().exec().then(function(preferredTag) {
+        console.log(preferredTag)
 
         if (!!preferredTag) {
-            console.log(preferredTag.tags)
 
             Article.find({
                 approved: true,
