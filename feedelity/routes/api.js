@@ -322,7 +322,7 @@ exports.updatePreferredTag = function(req, res) {
         return tag._id;
     });
     var current_username = req.user.userData._id;
-    console.log('test', sellectedTags);
+    // console.log('test', sellectedTags);
     PreferredTag.findOneAndUpdate({
         user: current_username
     }, {
@@ -331,7 +331,7 @@ exports.updatePreferredTag = function(req, res) {
     }, {
         upsert: true
     }).lean().exec().then(function(updatedPreferredTag) {
-        console.log(updatedPreferredTag);
+        // console.log(updatedPreferredTag);
         res.status(200).send({
             status: true
         });
@@ -367,7 +367,7 @@ exports.likeArticle = function(req, res) {
     var current_username = req.user.userData._id;
     var current_article = req.params.id;
 
-    console.log(current_article, current_username)
+    // console.log(current_article, current_username)
 
     Article.findOne({
         _id: current_article
@@ -436,7 +436,7 @@ exports.dislikeArticle = function(req, res) {
 
             var pos = article.dislikes.indexOf(current_username);
 
-            console.log(pos)
+            // console.log(pos)
 
             if (pos > -1) {
                 article.dislikes.splice(pos, 1);
@@ -455,7 +455,7 @@ exports.dislikeArticle = function(req, res) {
             };
 
             delete article._id;
-            console.log(article)
+            // console.log(article)
 
             Article.findOneAndUpdate({
                 _id: current_article
@@ -497,7 +497,7 @@ exports.likedArticles = function(req, res) {
         if (!!articles) {
             articles.sort(compareArticles);
             articles = processRawArticles(articles, current_username);
-            console.log(articles)
+            // console.log(articles)
             res.status(200).send(articles);
         };
     });
@@ -1175,7 +1175,7 @@ exports.getCategoryArticlesMaxLimit = function(req, res) {
 
 
 exports.getRecentArticles = function(req, res) {
-    console.log('yes')
+    // console.log('yes')
 
     var paginate = 20;
     var page = req.params.page;
@@ -1226,7 +1226,7 @@ exports.getTrendArticles = function(req, res) {
     PreferredTag.findOne({
         user: current_username,
     }).lean().exec().then(function(preferredTag) {
-        console.log(preferredTag)
+        // console.log(preferredTag)
 
         if (!!preferredTag) {
 
@@ -1234,7 +1234,7 @@ exports.getTrendArticles = function(req, res) {
                 return tag + '';
             });
 
-            console.log(mapedPreferredTag)
+            // console.log(mapedPreferredTag)
 
             Article.find({
                 approved: true,
@@ -1471,12 +1471,10 @@ function monthsDiff(d1, d2) {
 // ImageUpload functions
 
 exports.singleImageUpload = function(req, res) {
-    // console.log(req.files.file)
     var tempPath = req.files.file.path,
         ext = path.extname(req.files.file.name).toLowerCase(),
         newFileName = '/images/uploads/' + genarateUniqueHash() + ext;
     targetPath = path.resolve('./public' + newFileName);
-    // console.log(tempPath, ext, targetPath)
     if (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif') {
         fs.rename(tempPath, targetPath, function(err) {
             if (err) {
