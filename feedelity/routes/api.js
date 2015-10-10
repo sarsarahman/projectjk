@@ -1230,13 +1230,17 @@ exports.getTrendArticles = function(req, res) {
 
         if (!!preferredTag) {
 
+            var mapedPreferredTag = preferredTag.tags.map(function(tag) {
+                return tag + '';
+            });
+
             Article.find({
                 approved: true,
-                // tags: preferredTag.tags
+                tags: mapedPreferredTag
             }).sort({
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
-                
+
                 res.json(articles);
                 articles.sort(compareArticles);
                 articles = processRawArticles(articles, current_username);
