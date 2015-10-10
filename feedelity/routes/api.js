@@ -1234,9 +1234,13 @@ exports.getTrendArticles = function(req, res) {
                 return tag + '';
             });
 
+            console.log(mapedPreferredTag)
+
             Article.find({
                 approved: true,
-                tags: mapedPreferredTag
+                tags: {
+                    $in: mapedPreferredTag
+                }
             }).sort({
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
@@ -1271,7 +1275,9 @@ exports.getTrendArticlesMaxLimit = function(req, res) {
 
             Article.find({
                 approved: true,
-                tags: mapedPreferredTag
+                tags: {
+                    $in: mapedPreferredTag
+                }
             }).lean().exec().then(function(articles) {
                 if (!!articles) {
                     res.json({
