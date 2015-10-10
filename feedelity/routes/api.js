@@ -1243,7 +1243,7 @@ exports.getTrendArticles = function(req, res) {
                 }
             }).sort({
                 date: -1
-            }).skip(page * paginate).limit(paginate).populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
+            }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
                 res.json(articles);
                 articles.sort(compareArticles);
