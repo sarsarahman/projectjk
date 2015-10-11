@@ -1245,9 +1245,9 @@ exports.getTrendArticles = function(req, res) {
                 date: -1
             }).skip(page * paginate).limit(paginate).populate('tags', 'name').populate('location', 'name').populate('category', 'name').lean().exec().then(function(articles) {
 
-                res.json(articles);
                 articles.sort(compareArticles);
                 articles = processRawArticles(articles, current_username);
+                res.json(articles);
             });
 
         } else {
