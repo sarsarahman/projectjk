@@ -14,8 +14,8 @@ var request = require('request'),
 
 var deepPopulate = require('mongoose-deep-populate')(mongoose);
 
-
-
+var shortMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var longMonth = ['January','February','March','April','May','June','July','August','September','Octember','November','December'];
 
 
 
@@ -136,7 +136,8 @@ var articleSchema = mongoose.Schema({
 
 var tagSchema = mongoose.Schema({
     name: String,
-    boostValue: String
+    boostValue: String,
+    imgUrl: String
 });
 
 var catSchema = mongoose.Schema({
@@ -145,7 +146,8 @@ var catSchema = mongoose.Schema({
 });
 
 var locationSchema = mongoose.Schema({
-    name: String
+    name: String,
+    details: Object
 });
 
 var likeSchema = mongoose.Schema({
@@ -1405,9 +1407,11 @@ exports.updateTag = function(req, res) {
     };
     var name = req.body.name;
     var boostValue = req.body.boostValue;
+    var imgUrl = req.body.imgUrl;
     var update = {
         name: name,
         boostValue: boostValue,
+        imgUrl: imgUrl
     }
     Tag.findOneAndUpdate(query, update).exec().then(function(tag) {
         res.status(200).send(tag);
@@ -1441,8 +1445,11 @@ exports.delLocation = function(req, res) {
 
 exports.addLocation = function(req, res) {
     var name = req.body.name;
+    var details = req.body.details;
+    console.log(req,'add location with details');
     addLocation = new Local({
-        name: name
+        name: name,
+        details: details
     });
     Local.create(addLocation).then(function(addLocation) {
         res.status(200).send(addLocation);
@@ -1454,8 +1461,11 @@ exports.updateLocation = function(req, res) {
         _id: req.body._id
     };
     var name = req.body.name;
+    var details = req.body.details;
+    console.log(req,'request');
     var update = {
-        name: name,
+       name: name,
+       details: details
     }
     Local.findOneAndUpdate(query, update).exec().then(function(location) {
         res.status(200).send(location);
@@ -1471,9 +1481,18 @@ function monthsDiff(d1, d2) {
 // ImageUpload functions
 
 exports.singleImageUpload = function(req, res) {
+    
+    //Create folder to store image as per year and month
+    if (! fs.existsSync(path.resolve(__dirname, '..') + "/public/images/" + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear())) {
+        fs.mkdir(path.resolve(__dirname, '..') + "/public/images/" + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear());
+        //console.log("Folder Created");
+    }
+
     var tempPath = req.files.file.path,
         ext = path.extname(req.files.file.name).toLowerCase(),
-        newFileName = '/images/uploads/' + genarateUniqueHash() + ext;
+        //newFileName = '/images/uploads/' + genarateUniqueHash() + ext;
+        //newFileName = '/images/' + new Date().getFullYear() + "" + (new Date().getMonth() + 1) + "/" + genarateUniqueHash() + ext;
+        newFileName = '/images/' + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear() + "/" + genarateUniqueHash() + ext;
     targetPath = path.resolve('./public' + newFileName);
     if (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif') {
         fs.rename(tempPath, targetPath, function(err) {
@@ -1498,6 +1517,12 @@ exports.singleImageUpload = function(req, res) {
 
 exports.multipleImagesUpload = function(req, res) {
 
+    //Create folder to store image as per year and month
+    if (! fs.existsSync(path.resolve(__dirname, '..') + "/public/images/" + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear())) {
+        fs.mkdir(path.resolve(__dirname, '..') + "/public/images/" + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear());
+        //console.log("Folder Created");
+    }
+
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
@@ -1507,7 +1532,8 @@ exports.multipleImagesUpload = function(req, res) {
         var location = [];
         req.files.file.forEach(function(value, index, array) {
             //Default location files will be stored. The path will start at the location relative to this script. make sure you have an images folder.
-            var serverPath = __dirname + '/images/' + value.name;
+            //var serverPath = __dirname + '/images/' + value.name;
+            var serverPath = __dirname + '/images/' + shortMonth[new Date().getMonth()] + "_" + new Date().getFullYear() + "/"+ value.name;
 
             // Where you want your files to be saved too
             var serverLocation = '/var/www/server.com/public_html/images/'

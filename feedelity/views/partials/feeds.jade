@@ -58,9 +58,9 @@
       tr(ng-repeat='feed in feeds track by $index')
         td 
           a(href='{{feed.url}}', target='new') {{feed.name}}
-          a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modFeed") 
+          a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modFeed", title="Edit") 
             i.glyphicon.glyphicon-pencil
-          a(href="/feeds", ng-click="delete($index)") 
+          a(href="/feeds", ng-click="delete($index)", title="Delete") 
             i.glyphicon.glyphicon-remove
         td
           span.label(ng-class="bpFeedStatus(feed.state)") {{feed.state}}

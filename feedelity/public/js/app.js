@@ -1,7 +1,7 @@
 'use strict';
 
 // Declare app level module which depends on filters, and services
-angular.module('feedelity', ['feedelity.filters', 'feedelity.services', 'feedelity.directives', 'ngRoute', 'ngSanitize', 'ngFileUpload', 'ui.bootstrap','ui.bootstrap.datetimepicker','ui.select']).
+angular.module('feedelity', ['feedelity.filters', 'feedelity.services', 'feedelity.directives', 'ngRoute', 'ngSanitize', 'ngFileUpload', 'ui.bootstrap','ui.bootstrap.datetimepicker','ui.select','ngAutocomplete']).
 config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider.
     when('/articles/pending', {

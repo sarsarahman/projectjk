@@ -486,7 +486,8 @@ function CategorysCtrl($scope, $http, Upload) {
 }
 
 
-function TagsCtrl($scope, $http) {
+function TagsCtrl($scope, $http, Upload) {
+    $scope.editTag = {};
     $scope.delete = function(id) {
         var delTag = $scope.tags[id];
         $http({
@@ -543,6 +544,38 @@ function TagsCtrl($scope, $http) {
         else return 'label-error';
     }
 
+    $scope.upload = function(files) {
+        if (files && files.length) {
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                Upload.upload({
+                    url: '/api/images',
+                    fields: {
+                        'username': $scope.username
+                    },
+                    file: file
+                }).progress(function(evt) {
+                    var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+                    console.log('progress: ' + progressPercentage + '% ' + evt.config.file.name);
+                }).success(function(data, status, headers, config) {
+                    $scope.editTag.imgUrl = data.path;
+
+                    // returnValue=JSON.stringify(data.path);
+                    // console.log(config);
+                    // console.log('file ' + config.file.name + 'uploaded. Response: ' + JSON.stringify(data));
+                });
+            }
+        }
+    };
+
+    $scope.getImage = function() {
+        if ($scope.editTag.imgUrl == '' || $scope.editTag.imgUrl == undefined) {
+            return '/images/no_image.jpg';
+        } else {
+            return $scope.editTag.imgUrl;
+        };
+    }
+
 }
 
 
@@ -553,6 +586,17 @@ function LogoutCtrl($scope, $http) {
 }
 
 function LocationsCtrl($scope, $http) {
+
+    $scope.addLocation= {
+        name :'',
+        details:''
+    };
+
+    $scope.location_options = {
+      country: 'in',
+      types: '(cities)'
+    };
+
     $scope.delete = function(id) {
         var delLocation = $scope.locations[id];
 
@@ -567,6 +611,7 @@ function LocationsCtrl($scope, $http) {
     }
 
     $scope.add = function() {
+        console.log(typeof($scope.addLocation.details), 'details');
         $http({
             method: 'POST',
             data: $scope.addLocation,

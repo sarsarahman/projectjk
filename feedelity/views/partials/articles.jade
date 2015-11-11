@@ -61,7 +61,10 @@
           .form-group
             label(for='editImage', size='30') Featured Image
             br
-            img(src='{{getImage()}}', style='width:100px;height:100px;', name='editImage')
+            label(for='editImage', size='20') Image Url
+            input.form-control#editImage(type="text", name="editImage", placeholder='Paste Image URL here', size='60', ng-model="editArticle.imgUrl", required) 
+            | &nbsp;
+            img(src='{{getImage()}}', style='width:100px;height:100px;margin-right:20px', name='editImage')
             .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false', class='btn btn-primary')
               i.glyphicon.glyphicon-upload
               div Select Image
@@ -72,7 +75,7 @@
           | &nbsp;
 
           .form-group
-            label(for='date') Date : {{editArticle.date}}
+            label(for='date') Date : {{editArticle.date | date}}
             datetimepicker(name='date',show-weeks='false', hour-step='1', minute-step='1', ng-model='editArticle.date', show-meridian='false', date-format='dd-MMM-yyyy', readonly-time='false', date-options='dateOptions')
 
 
@@ -146,7 +149,10 @@
           .form-group
             label(for='editImage', size='30') Featured Image
             br
-            img(src='{{getImage()}}', style='width:100px;height:100px;', name='editImage')
+            label(for='editImage', size='20') Image Url
+            input.form-control#editImage(type="text", name="editImage", placeholder='Paste Image URL here', size='60', ng-model="editArticle.imgUrl", required) 
+            | &nbsp;
+            img(src='{{getImage()}}', style='width:100px;height:100px;margin-right:20px', name='editImage')
             .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false', class='btn btn-primary')
               i.glyphicon.glyphicon-upload
               div Select Image
@@ -201,19 +207,19 @@ p(ng-show='articles.length == 0') No such articles.
           span
             span.label.label-info {{article._feed[0].name}}
           span
-            a(href="{{article.link}}", target='new')
+            a(href="{{article.link}}", target='new', title="Visit the link")
               i.glyphicon.glyphicon-globe
           span
-            a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modArticle")
+            a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modArticle", title="Edit")
               i.glyphicon.glyphicon-pencil
           span
-            a(href="{{article.link}}", target='new')
+            a(href="{{article.link}}", target='new', title="Delete")
               i.glyphicon.glyphicon-trash
           span
-            a(href="", ng-click="approved($index)", ng-class="(article.approved == false) ? 'selected' : 'unselected'")
+            a(href="", ng-click="approved($index)", ng-class="(article.approved == false) ? 'selected' : 'unselected'", title="Approve")
               i.glyphicon.glyphicon-ok-sign
           span
-            a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'")
+            a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'", title="Star")
               i(ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
     .panel-collapse.collapse(id="article-{{$index}}")
       .panel-body
@@ -224,10 +230,10 @@ nav
   .page_number {{page}}
   ul.pager
     li.previous(ng-click='fetchArticles("previous")')
-      a
+      a(href="")
         span(aria-hidden='true') ←
         |  Newer
     li.next(ng-click='fetchArticles("next")')
-      a
+      a(href="")
         | Older 
         span(aria-hidden='true') →

@@ -10,8 +10,12 @@
         form(role='form', name='editLocationForm')
           input(type='hidden')
           .form-group
+            //img(ng-src='{{ editLocation.details.icon }}', style='width:100px;height:100px;margin-right:20px', name='editName')
             label(for='editName', size='30') Name
             input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editLocation.name") 
+            br
+            label(for='editName', size='30') Details
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editLocation.details.icon") 
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='update()') Save
@@ -19,7 +23,7 @@
   form.form-inline.pull-right(role='form', name='addLocationForm')
     .form-group
       label.sr-only(for='addLocation') Location
-      input.input-sm.form-control#addLocation(type="text", name="addLocation", placeholder='Enter Location', size='60', ng-model="addLocation.name", required) 
+      input.input-sm.form-control#addLocation(type="text", name="addLocation", placeholder='Enter Location', size='60', ng-autocomplete="addLocation.name", details="addLocation.details", options="location_options", required) 
     button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
       i.glyphicon.glyphicon-plus
       |  Add
@@ -28,14 +32,18 @@ table.table.table-striped.table-bordered.table-hover
   thead
     tr
       th #
+      th Image
       th Name
       th Actions
   tbody
     tr(ng-repeat='location in locations track by $index| filter:searchText')
       td {{location._id}}
+      td
+        img(ng-src='{{location.details.icon}}', style='width:20px;height:20px')
       td {{location.name}}
       td
-        a.color-edit(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modLocation")
+        a.color-edit(href='', ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modLocation", title='Edit')
           i.glyphicon.glyphicon-pencil
-        a.color-delete(ng-click='delete($index)')
+        &nbsp; &nbsp;
+        a.color-delete(href='', ng-click='delete($index)', title='Delete')
           i.glyphicon.glyphicon-trash
