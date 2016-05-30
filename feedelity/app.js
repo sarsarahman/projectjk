@@ -79,14 +79,16 @@ passport.use('userlogin', new LocalStrategy({
         });
     }));
 
-passport.use('adminlogin', new LocalStrategy({
+// passport.use('adminlogin', new LocalStrategy({
+passport.use('stafflogin', new LocalStrategy({
         usernameField: 'username',
         passwordField: 'password',
         passReqToCallback: true,
     },
     function(req, username, password, done) {
         // console.log(req.body)
-        var resUserData = api.adminLogin(req.body, function(user) {
+        // var resUserData = api.adminLogin(req.body, function(user) {
+        var resUserData = api.staffLogin(req.body, function(user) {
             // console.log(user)
 
             if (!!user) {
@@ -143,6 +145,7 @@ var app = module.exports = express();
 
 // all environments
 app.configure(function() {
+    process.env.TMPDIR = '.'; //for defining temp folder to rename image while uploading
     app.set('port', process.env.PORT || 3000);
     app.set('views', __dirname + '/views');
     app.set('view engine', 'jade');
@@ -167,7 +170,6 @@ app.configure(function() {
 });
 
 
-
 // development only
 if (app.get('env') === 'development') {
     app.use(express.errorHandler());
@@ -186,7 +188,8 @@ app.get('/partial/:name', routes.partial);
 app.get('/login', routes.login);
 
 app.post('/login',
-    passport.authenticate('adminlogin', {
+    // passport.authenticate('adminlogin', {
+    passport.authenticate('stafflogin', {
         successRedirect: '/'
     }),
     function(req, res) {
@@ -259,6 +262,14 @@ app.get('/api/disliked', api.dislikedArticles);
 // JSON API
 app.get('/api/users/:page', api.fetchUsers);
 app.get('/api/refresh', api.refreshFeeds);
+
+app.get('/api/fetchstaffs/:page', api.fetchStaffs);
+app.post('/api/staffs', api.addStaff);
+app.get('/api/staffs/:id', api.getStaff);
+app.put('/api/staffs/:id', api.updateStaff);
+app.delete('/api/staffs/:id', api.delStaff);
+app.put('/api/banstaffs/:id', api.banStaff);
+app.put('/api/unbanstaffs/:id', api.unbanStaff);
 
 app.get('/api/articles/pending/:page', api.getPendingArticles);
 app.get('/api/articles/approved/:page', api.getApprovedArticles);

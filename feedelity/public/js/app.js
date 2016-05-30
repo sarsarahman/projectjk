@@ -35,6 +35,10 @@ config(['$routeProvider', '$locationProvider', function($routeProvider, $locatio
         templateUrl: 'partial/locations',
         controller: LocationsCtrl
     }).
+    when('/staffs', {
+        templateUrl: 'partial/staffs',
+        controller: StaffsCtrl
+    }).
     when('/users', {
         templateUrl: 'partial/users',
         controller: UsersCtrl

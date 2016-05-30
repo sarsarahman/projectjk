@@ -18,12 +18,6 @@ var shortMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','N
 var longMonth = ['January','February','March','April','May','June','July','August','September','Octember','November','December'];
 
 
-
-
-
-
-
-
 var genarateUniqueHash = function() {
     var hash = crypto.createHash('md5').update(new Date().toISOString()).digest('hex');
     // console.log(hash)
@@ -50,14 +44,33 @@ var feedSchema = mongoose.Schema({
     lastErrorNb: Number,
     lastOutdatedNb: Number,
     state: String,
-    category: {
+    category: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category'
-    },
-    location: {
+    }],
+    location: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Location'
+    }],
+    isActive: {
+        type: Boolean,
+        default: true
     },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: Date,
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
 });
 
 var userSchema = mongoose.Schema({
@@ -81,6 +94,26 @@ var userSchema = mongoose.Schema({
     status: Boolean
 });
 
+var staffSchema = mongoose.Schema({
+    name: String,
+    username: String,
+    password: String,
+    email: String,
+    gender: String,
+    mobileNumber: String,
+    location: String,
+    dp: String,
+    status: Boolean,
+    isBlocked : {
+        type: Boolean,
+        default: false
+    },
+    adminLevel : {
+        type: Number,
+        default: 2
+    }
+});
+
 var adminUserSchema = mongoose.Schema({
     name: String,
     username: String,
@@ -90,7 +123,11 @@ var adminUserSchema = mongoose.Schema({
     mobileNumber: String,
     location: String,
     dp: String,
-    status: Boolean
+    status: Boolean,
+    adminLevel: {
+        type: Number,
+        default: 1
+    }
 });
 
 var articleSchema = mongoose.Schema({
@@ -124,14 +161,41 @@ var articleSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Tag'
     }],
-    category: {
+    category: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category'
-    },
-    location: {
+    }],
+    location: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Location'
-    }
+    }],
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    approvedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
 });
 
 var tagSchema = mongoose.Schema({
@@ -176,8 +240,6 @@ var bookmarkSchema = mongoose.Schema({
 });
 
 
-
-
 var preferredTagSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -190,17 +252,13 @@ var preferredTagSchema = mongoose.Schema({
 });
 
 
-
-
-
-
-
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
 Category = mongoose.model('Category', catSchema);
 Tag = mongoose.model('Tag', tagSchema);
 Local = mongoose.model('Location', locationSchema);
 User = mongoose.model('User', userSchema);
+Staff = mongoose.model('Staff', staffSchema);
 AdminUser = mongoose.model('AdminUser', adminUserSchema);
 Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
@@ -277,13 +335,124 @@ exports.fetchUsers = function(req, res) {
 }
 
 
+// ^Staffs
+exports.staffLogin = function(userData, callback) {
+    // addStaff = new Staff({
+    //     name: 'Abdur Rahman',
+    //     username: 'admin',
+    //     password: 'password',
+    //     email: 'sarsarahman@gmail.com',
+    //     gender: 'Male',
+    //     mobileNumber: '9840903819',
+    //     location: 'Chennai',
+    //     dp: 'String',
+    //     status: true,
+    //     adminLevel: 1
+    // });
 
+    // Staff.create(addStaff).then(function(addStaff) {
+    //     // res.status(200).send(adduser);
+    //       callback(addStaff);
+    // });
 
+    Staff.findOne({
+        username: userData.username,
+        password: userData.password
+    }).lean().exec().then(function(user) {
+        if (!!user) {
+            user.role = 'admin';
+            callback(user);
+        } else {
+            callback(false);
+        };
+    });
+}
+
+exports.fetchStaffs = function(req, res) {
+    var paginate = 20;
+    var page = req.params.page;
+    Staff.find({adminLevel:2}).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).exec().then(function(staffs) {
+        res.json(staffs);
+    });
+}
+
+exports.addStaff = function(req, res) {
+    var username = req.body.username;
+    var password = req.body.password;
+    addStaff = new Staff({
+        name: "",
+        username: username,
+        password: password,
+        email: '',
+        gender: '',
+        mobileNumber: '',
+        location: 'Chennai',
+        dp: '',
+        status: true
+    });
+    Staff.create(addStaff).then(function(addStaff) {
+        res.status(200).send(addStaff);
+    });
+}
+
+exports.getStaff = function(req, res) {
+    var id = req.params.id;
+    var staff = Staff.findById(id).exec();
+    staff.then(function(staff) {
+        res.json(staff);
+    });
+}
+
+exports.updateStaff = function(req, res) {
+    var query = {
+        _id: req.body._id
+    };
+    var username = req.body.username;
+    var name = req.body.name;
+    var email = req.body.email;
+    var gender = req.body.gender;
+    var mobile = req.body.mobileNumber;
+    var location = req.body.location;
+    var update = {
+        username: username,
+        name: name,
+        email: email,
+        gender: gender,
+        mobileNumber: mobile,
+        location: location
+    }
+    Staff.findOneAndUpdate(query, update).exec().then(function(staff) {
+        res.status(200).send(staff);
+    });
+}
+
+exports.delStaff = function(req, res) {
+    var id = req.params.id;
+    Staff.remove({
+        _id: id
+    }).exec().then(function(staff) {
+        res.status(200).send();
+    });
+}
+
+exports.banStaff = function(req, res) {
+    var id = req.params.id;
+    Staff.findByIdAndUpdate(id, {$set:{isBlocked:true}}).exec().then(function(staff) {
+        res.status(200).send(staff);
+    });
+}
+
+exports.unbanStaff = function(req, res) {
+    var id = req.params.id;
+    Staff.findByIdAndUpdate(id, {$set:{isBlocked:false}}).exec().then(function(staff) {
+        res.status(200).send(staff);
+    });
+}
+// $Staffs
 
 exports.adminLogin = function(userData, callback) {
-
-
-
     // addUser = new AdminUser({
     //     name: 'Abdur Rahman',
     //     username: 'admin',
@@ -301,8 +470,6 @@ exports.adminLogin = function(userData, callback) {
     //       callback(addUser);
     // });
 
-
-
     AdminUser.findOne({
         username: userData.username,
         password: userData.password
@@ -315,7 +482,6 @@ exports.adminLogin = function(userData, callback) {
         };
     });
 }
-
 
 
 exports.updatePreferredTag = function(req, res) {
@@ -342,7 +508,6 @@ exports.updatePreferredTag = function(req, res) {
 }
 
 
-
 exports.getPreferredTag = function(req, res) {
 
     var current_username = req.user.userData._id;
@@ -361,9 +526,7 @@ exports.getPreferredTag = function(req, res) {
 }
 
 
-
 //Like and Dislike functions
-
 exports.likeArticle = function(req, res) {
 
     var current_username = req.user.userData._id;
@@ -489,8 +652,6 @@ exports.dislikeArticle = function(req, res) {
 }
 
 
-
-
 exports.likedArticles = function(req, res) {
     var current_username = req.user.userData._id;
     Article.find({
@@ -518,15 +679,6 @@ exports.dislikedArticles = function(req, res) {
         };
     });
 }
-
-
-
-
-
-
-
-
-
 
 
 //Bookmark functions
@@ -613,6 +765,7 @@ exports.bookmarkedArticlesMaxLimit = function(req, res) {
 // Feeds functions
 
 exports.refreshFeeds = function(req, res) {
+    userId = req.user._id;
     Feed.find().exec().then(function(feeds) {
         async.map(feeds, refreshFeed, function(err, feeds) {
             if (conf.activePeriod != -1) {
@@ -638,20 +791,38 @@ exports.getFeed = function(req, res) {
 }
 
 exports.getFeeds = function(req, res) {
-    Feed.find().populate('location', 'name').populate('category', 'name').exec().then(function(feeds) {
+    // Feed.find().populate('location', 'name').populate('category', 'name').exec().then(function(feeds) {
+    Feed.find({isActive:true}).populate('location', 'name').populate('category', 'name').exec().then(function(feeds) {
         res.json(feeds);
     });
 }
 
 exports.delFeed = function(req, res) {
     var id = req.params.id;
-    Article.remove({
+    // Article.remove({
+    //     _feed: id
+    // }).exec().then(function(articles) {
+    //     Feed.remove({
+    //         _id: id
+    //     }).exec().then(function(feed) {
+    //         res.status(200).send();
+    //     });
+    // });
+    Article.update({
         _feed: id
-    }).exec().then(function(articles) {
-        Feed.remove({
+    }, {$set:{
+        isActive:false,
+        deletedBy: req.user._id,
+        deletedOn: new Date()
+    }}, {multi:true}).exec().then(function(articles) {
+        Feed.findByIdAndUpdate({
             _id: id
-        }).exec().then(function(feed) {
-            res.status(200).send();
+        }, {$set:{
+            isActive:false,
+            deletedBy: req.user._id,
+            deletedOn: new Date()
+        }}).exec().then(function(feed) {
+            res.status(200).send(feed);
         });
     });
 }
@@ -660,8 +831,8 @@ exports.addFeed = function(req, res) {
     var url = req.body.url;
 
 
-    var categoryId = '';
-    var locationId = '';
+    var categoryId = [];
+    var locationId = [];
 
     addFeed = new Feed({
         name: url,
@@ -671,7 +842,9 @@ exports.addFeed = function(req, res) {
         location: locationId,
         lastFetched: 0,
         lastErrors: 0,
-        lastOudated: 0
+        lastOudated: 0,
+        addedBy: req.user._id,
+        addedOn: new Date()
     });
     Feed.create(addFeed).then(function(addFeed) {
         res.status(200).send(addFeed);
@@ -683,15 +856,23 @@ exports.updateFeed = function(req, res) {
         _id: req.body._id
     };
 
-    var categoryId = '';
-    var locationId = '';
+    // var categoryId = '';
+    var categoryId = [];
+    var locationId = [];
 
-    if (req.body.category.hasOwnProperty('_id')) {
-        categoryId = req.body.category._id;
-    };
+    // if (req.body.category.hasOwnProperty('_id')) {
+    //     categoryId = req.body.category._id;
+    // };
+    if(req.body.category) {
+        for(var i in req.body.category) {
+            categoryId.push(req.body.category[i]._id);
+        }
+    }
 
-    if (req.body.location.hasOwnProperty('_id')) {
-        locationId = req.body.location._id;
+    if (req.body.location) {
+        for(var i in req.body.location) {
+            locationId.push(req.body.location[i]._id);
+        }
     };
 
     var update = {
@@ -699,9 +880,15 @@ exports.updateFeed = function(req, res) {
         url: req.body.url,
         category: categoryId,
         location: locationId,
+        updatedBy: req.user._id,
+        updatedOn: new Date()
     }
-    Feed.findOneAndUpdate(query, update).exec().then(function(feed) {
-        res.status(200).send(feed);
+    // Feed.findOneAndUpdate(query, update).exec().then(function(feed) {
+    //     res.status(200).send(feed);
+    // });
+    Feed.findOneAndUpdate(query, update).exec(function(err, feed) {
+        if(err) console.log('update feed err:', err);
+        else res.status(200).send(feed);
     });
 }
 
@@ -750,6 +937,7 @@ function refreshFeed(feed, callBack) {
             var newArticles = [];
             for (var i = 0; i < articles.length; i++) {
                 var cur = articles[i];
+                cur.addedBy = userId;
                 if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
             }
 
@@ -781,7 +969,8 @@ exports.getPendingArticles = function(req, res) {
     var page = req.params.page;
     // var page = 0;
     Article.find({
-        approved: false
+        approved: false,
+        isActive: true
     }).sort({
         date: -1
     }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
@@ -795,7 +984,8 @@ exports.getApprovedArticles = function(req, res) {
     var page = req.params.page;
 
     Article.find({
-        approved: true
+        approved: true,
+        isActive: true
     }).sort({
         date: -1
     }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
@@ -811,7 +1001,8 @@ exports.getStarredArticles = function(req, res) {
     var paginate = 20;
     var page = req.params.page;
     Article.find({
-        starred: true
+        starred: true,
+        isActive: true
     }).sort({
         date: -1
     }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
@@ -829,7 +1020,6 @@ exports.getArticle = function(req, res) {
 }
 
 exports.addArticle = function(req, res) {
-    // console.log('aad');
     var article = req.body;
 
     if (req.body.tags.length > 0) {
@@ -868,7 +1058,9 @@ exports.addArticle = function(req, res) {
         guid: req.body.guid,
         likes: [],
         dislikes: [],
-        bookmarks: []
+        bookmarks: [],
+        addedBy: req.user._id,
+        addedOn: new Date()
     });
     Article.create(addArticle).then(function(addArticle) {
         res.status(200).send(addArticle);
@@ -876,9 +1068,8 @@ exports.addArticle = function(req, res) {
 }
 
 exports.updateArticle = function(req, res) {
-
-    var categoryId = '';
-    var locationId = '';
+    var categoryId = [];
+    var locationId = [];
     var tagIds = [];
 
     // console.log(req.body)
@@ -894,39 +1085,76 @@ exports.updateArticle = function(req, res) {
     };
 
     if (req.body.category) {
-        if ('_id' in req.body.category) {
-            categoryId = req.body.category._id;
-        } else {
-            categoryId = '';
-        };
+        // if ('_id' in req.body.category) {
+        //     categoryId = req.body.category._id;
+        // } else {
+        //     categoryId = '';
+        // };
+        for(var i in req.body.category) {
+            categoryId.push(req.body.category[i]._id);
+        }
     };
 
     if (req.body.location) {
-        if ('_id' in req.body.location) {
-            locationId = req.body.location._id;
-        } else {
-            locationId = '';
-        };
+        // if ('_id' in req.body.location) {
+        //     locationId = req.body.location._id;
+        // } else {
+        //     locationId = '';
+        // };
+        for(var i in req.body.location) {
+            locationId.push(req.body.location[i]._id);
+        }
     };
 
 
     // console.log(tagIds);
 
-    var update = {
-        starred: req.body.starred,
-        approved: req.body.approved,
-        name: req.body.name,
-        title: req.body.title,
-        summary: req.body.summary,
-        date: Date.parse(req.body.date),
-        tags: tagIds,
-        imgUrl: req.body.imgUrl,
-        category: categoryId,
-        location: locationId,
-        description: req.body.description,
-        author: req.body.author,
-        link: req.body.link,
-        guid: req.body.guid,
+    if(req.body.approved) {
+        var update = {
+            starred: req.body.starred,
+            approved: req.body.approved,
+            name: req.body.name,
+            title: req.body.title,
+            summary: req.body.summary,
+            date: Date.parse(req.body.date),
+            tags: tagIds,
+            imgUrl: req.body.imgUrl,
+            category: categoryId,
+            location: locationId,
+            description: req.body.description,
+            author: req.body.author,
+            link: req.body.link,
+            guid: req.body.guid,
+            approvedBy: req.user._id,
+            approvedOn : new Date()
+        }
+        // Article.findOneAndUpdate(query, update).exec().then(function(article) {
+        //     // console.log(article,update); 
+        //     res.status(200).send(article);
+        // });
+    } else {
+        var update = {
+            starred: req.body.starred,
+            approved: req.body.approved,
+            name: req.body.name,
+            title: req.body.title,
+            summary: req.body.summary,
+            date: Date.parse(req.body.date),
+            tags: tagIds,
+            imgUrl: req.body.imgUrl,
+            category: categoryId,
+            location: locationId,
+            description: req.body.description,
+            author: req.body.author,
+            link: req.body.link,
+            guid: req.body.guid,
+            updatedBy: req.user._id,
+            updatedOn: new Date()
+        }
+        // Article.findOneAndUpdate(query, update).exec().then(function(article) {
+        //     // console.log(article,update); 
+        //     res.status(200).send(article);
+        // });
     }
     Article.findOneAndUpdate(query, update).exec().then(function(article) {
         // console.log(article,update); 
@@ -936,10 +1164,12 @@ exports.updateArticle = function(req, res) {
 
 exports.delArticle = function(req, res) {
     var id = req.params.id;
-    Article.remove({
-        _id: id
-    }).exec().then(function(article) {
-        res.status(200).send();
+    Article.findByIdAndUpdate(id, { $set: {
+        isActive: false,
+        deletedBy: req.user._id,
+        deletedOn: new Date()
+    }} ).exec().then(function(article) {
+        res.status(200).send(article);
     });
 }
 
@@ -1300,13 +1530,6 @@ exports.getTrendArticlesMaxLimit = function(req, res) {
 }
 
 
-
-
-
-
-
-
-
 // Category
 exports.getCategory = function(req, res) {
     var id = req.params.id;
@@ -1346,13 +1569,17 @@ exports.updateCategory = function(req, res) {
         _id: req.body._id
     };
     var name = req.body.name;
-    var imgUrl = req.body.imgUrl;
+    var imgUrl = req.body.imgUrl || '';
     var update = {
         name: name,
         imgUrl: imgUrl
     }
-    Category.findOneAndUpdate(query, update).exec().then(function(category) {
-        res.status(200).send(category);
+    // Category.findOneAndUpdate(query, update).exec().then(function(category) {
+    //     res.status(200).send(category);
+    // });
+    Category.findOneAndUpdate(query, update).exec(function(err, category) {
+        if(err) console.log('update category err:', err);
+        else res.status(200).send(category);
     });
 }
 
@@ -1446,7 +1673,7 @@ exports.delLocation = function(req, res) {
 exports.addLocation = function(req, res) {
     var name = req.body.name;
     var details = req.body.details;
-    console.log(req,'add location with details');
+    // console.log(req,'add location with details');
     addLocation = new Local({
         name: name,
         details: details

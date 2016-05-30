@@ -18,14 +18,18 @@
             input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
           .form-group
             label(for='editCat', size='30') Category {{categoryDropDown.selected}}
-            ui-select(id='editCat',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+            //- ui-select(id='editCat',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
               ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+              ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='category.name | highlight: $select.search')
+            ui-select(id='editCat',multiple='',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$item.name}}
               ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='category.name | highlight: $select.search')
           .form-group
             label(for='editLocation', size='30') Location {{locationDropDown.selected}}
-            ui-select(id='editLocation',ng-model='editFeed.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
-              ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
+            ui-select(id='editLocation',multiple='',ng-model='editFeed.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$item.name}}
               ui-select-choices(repeat='location in locations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='location.name | highlight: $select.search')
                     

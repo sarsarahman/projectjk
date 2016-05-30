@@ -39,14 +39,14 @@
 
           .form-group
             label(for='editCat', size='30') Category 
-            ui-select(id='editCat',ng-model='editArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
-              ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+            ui-select(id='editCat',multiple='',ng-model='editArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$item.name}}
               ui-select-choices(repeat='category in trimmedCategorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='category.name | highlight: $select.search')
           .form-group
             label(for='editLocation', size='30') Location 
-            ui-select(id='editLocation',ng-model='editArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
-              ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
+            ui-select(id='editLocation',multiple='',ng-model='editArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$item.name}}
               ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='location.name | highlight: $select.search')
 
@@ -78,19 +78,9 @@
             label(for='date') Date : {{editArticle.date | date}}
             datetimepicker(name='date',show-weeks='false', hour-step='1', minute-step='1', ng-model='editArticle.date', show-meridian='false', date-format='dd-MMM-yyyy', readonly-time='false', date-options='dateOptions')
 
-
-
-
-
-
-
-                    
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='updateArticle()') Save
-
-
-
 
 
 .modal.fade#modAddArticle(tabindex="-1", role="dialog", aria-labelledby="Edit article", aria-hidden="true")
@@ -127,14 +117,14 @@
 
           .form-group
             label(for='editCat', size='30') Category 
-            ui-select(id='editCat',ng-model='addArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
-              ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+            ui-select(id='editCat',multiple='',ng-model='addArticle.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$item.name}}
               ui-select-choices(repeat='category in trimmedCategorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='category.name | highlight: $select.search')
           .form-group
             label(for='editLocation', size='30') Location 
-            ui-select(id='editLocation',ng-model='addArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
-              ui-select-match(placeholder='Enter an address...') {{$select.selected.name}}
+            ui-select(id='editLocation',multiple='',ng-model='addArticle.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$item.name}}
               ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
                 div(ng-bind-html='location.name | highlight: $select.search')
 
@@ -166,13 +156,6 @@
             label(for='date') Date : {{addArticle.date}}
             datetimepicker(name='date',show-weeks='false', hour-step='1', minute-step='1', ng-model='addArticle.date', show-meridian='false', date-format='dd-MMM-yyyy', readonly-time='false', date-options='dateOptions')
 
-
-
-
-
-
-
-                    
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='add()') Save
@@ -193,6 +176,9 @@
           button.btn.btn-primary(type="button", ng-click='ensureApprovedAll()')
             i.glyphicon.glyphicon-folder-open
             |  Approve all
+          button.btn.btn-primary(type="button", ng-click='ensureApprovedSelected()')
+            i.glyphicon.glyphicon-folder-open
+            |  Approve / Disapprove Selected
           button.btn-sm.btn.btn-primary(ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modAddArticle")
             i.glyphicon.glyphicon-plus
             |  Add New Article
@@ -201,29 +187,57 @@ p(ng-show='articles.length == 0') No such articles.
   .panel.panel-default(ng-repeat='article in articles | filter:search.text | feedSelected:search.feed')
     .panel-heading()
       h4(ng-class="(article.approved == true) ? 'panel-title article-read' : 'panel-title'")
-        a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", onclick='return false;') {{article.title | limitTo:50}}
-        small.pull-right.article-tb
-          span {{article.date | timeago}}
-          span
-            span.label.label-info {{article._feed[0].name}}
-          span
-            a(href="{{article.link}}", target='new', title="Visit the link")
-              i.glyphicon.glyphicon-globe
-          span
-            a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modArticle", title="Edit")
-              i.glyphicon.glyphicon-pencil
-          span
-            a(href="{{article.link}}", target='new', title="Delete")
-              i.glyphicon.glyphicon-trash
-          span
-            a(href="", ng-click="approved($index)", ng-class="(article.approved == false) ? 'selected' : 'unselected'", title="Approve")
-              i.glyphicon.glyphicon-ok-sign
-          span
-            a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'", title="Star")
-              i(ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
+        form.form-inline
+          .checkbox
+            label
+              input(type='checkbox', ng-model='chkValue', ng-change="multipleApprove($index, chkValue)")
+          a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", onclick='return false;') {{article.title | limitTo:40}}
+          small.pull-right.article-tb
+            span {{article.date | timeago}}
+            span
+              span.label.label-info {{article._feed[0].name}}
+            span
+              a(href="{{article.link}}", target='new', title="Visit the link")
+                i.glyphicon.glyphicon-globe
+            span
+              a(href="#editarticle-{{$index}}", data-toggle="collapse", data-parent="#accArticles", onclick='return false;', title="Quick Edit", ng-click="dispUpdate($index)")
+                i.glyphicon.glyphicon-edit
+            span
+              a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modArticle", title="Edit")
+                i.glyphicon.glyphicon-pencil
+            span
+              a(href="", ng-click="delete($index)", title="Delete")
+                i.glyphicon.glyphicon-trash
+            span
+              a(href="", ng-click="approved($index)", ng-class="(article.approved == false) ? 'selected' : 'unselected'", title="Approve")
+                i.glyphicon.glyphicon-ok-sign
+            span
+              a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'", title="Star")
+                i(ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
     .panel-collapse.collapse(id="article-{{$index}}")
       .panel-body
         div(ng-bind-html="article.summary")
+
+    .panel-collapse.collapse(id="editarticle-{{$index}}")
+      .panel-body
+        //- div(ng-bind-html="article.summary")
+        form(role='form', name='editArticleForm')
+          input(type='hidden')
+          .form-group
+            label(for='editTitle') Title
+            input.form-control#editTitle(type="text", name="editTitle", placeholder='Enter Title', size='60', ng-model="editArticle.title", required) 
+
+          .form-group
+            label(for='editSummary', size='30') Summary
+            textarea.form-control#editSummary(type="text", name="editSummary", placeholder='Enter summary', ng-model="editArticle.summary", style="margin: 0px; height: 204px; width: 569px; max-width: 100%; max-height: 150px;min-height: 150px;") 
+
+          .form-group
+            label(for='editDescription', size='30') Description
+            textarea.form-control#editDescription(type="text", name="editDescription", placeholder='Enter description', ng-model="editArticle.description", style="margin: 0px; height: 204px; width: 569px; max-width: 100%; max-height: 150px;min-height: 150px;")
+
+          button.btn.btn-sm.btn-primary(type="submit", ng-click='updateArticleQuickEdit()')
+            i.glyphicon.glyphicon-save
+            |  Save
 
 
 nav 

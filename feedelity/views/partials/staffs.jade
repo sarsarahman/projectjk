@@ -1,0 +1,96 @@
+.page-header
+  h1 Staffs
+
+.modal.fade#modStaff(tabindex="-1", role="dialog", aria-labelledby="Edit staff", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modStaffLbl.modal-title Edit staff
+      .modal-body
+        form(role='form', name='editStaffForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUsername') Username
+            input.form-control#editUsername(type="text", name="editUsername", placeholder='Enter Username', size='60', ng-model="editStaff.username", required) 
+          //- | &nbsp;
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editStaff.name")
+          .form-group
+            label(for='editEmail', size='30') Email
+            input.form-control#editEmail(type="text", name="editEmail", placeholder='Enter email', ng-model="editStaff.email")
+          .form-group
+            label(for='editGender', size='30') Gender {{genderDropDown.selected}}
+            ui-select(id='editGender',ng-model='editStaff.gender', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Select gender...') {{$select.selected}}
+              ui-select-choices(repeat='gender in genders | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='gender | highlight: $select.search')
+          //- .form-group
+          //-   label(for='editGender') Gender
+          //-   select#editGender.form-control(ng-model="editStaff.gender")
+          //-     option Male
+          //-     option Female
+          //- .form-group
+          //-   label(for='editGender', size='30') Gender
+          //-   input.form-control#editGender(type="text", name="editGender", placeholder='Enter gender', ng-model="editStaff.gender")
+          .form-group
+            label(for='editMobile', size='30') Mobile
+            input.form-control#editMobile(type="text", name="editMobile", placeholder='Enter mobile number', ng-model="editStaff.mobileNumber")
+          .form-group
+            label(for='editLocation', size='30') Location
+            input.form-control#editLocation(type="text", name="editLocation", placeholder='Enter location', ng-model="editStaff.location") 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+
+#form-feed.hidden-xs
+  form.form-inline.pull-right(role='form', name='addStaffForm')
+    .form-group
+      label.sr-only(for='addStaff') Staff
+      input.input-sm.form-control#addStaffName(type="text", name="addStaffName", placeholder="Enter Staff's User Name", size='60', ng-model="addStaff.username", required) 
+      input.input-sm.form-control#addStaffPassword(type="text", name="addStaffPassword", placeholder='Enter Staff Password', size='60', ng-model="addStaff.password", required) 
+    button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add Staff
+
+  .clear
+table.table.table-striped.table-bordered.table-hover
+  thead
+    tr
+      //- th User ID
+      //- th Display Picture
+      th Username
+      th Name
+      th Email
+      th Gender
+      th Mobile
+      th Location
+      //- th User Likes
+      //- th Likes
+      //- th Dislikes
+      th Actions
+  tbody
+    tr(ng-repeat='staff in staffs track by $index | filter:searchText')
+      //- td {{staff._id}}
+      //- td
+      td {{staff.username}}
+      td {{staff.name}}
+      td {{staff.email}}
+      td {{staff.gender}}
+      td {{staff.mobileNumber}}
+      td {{staff.location}}
+      //- td
+      //- td
+      //- td
+      td
+        a.color-edit(href='', ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modStaff",title='Edit')
+          i.glyphicon.glyphicon-pencil
+        &nbsp;&nbsp;
+        a.color-delete(href='',ng-click='delete($index)',title='Delete')
+          i.glyphicon.glyphicon-trash
+        &nbsp;&nbsp;
+        a(href='',ng-if='staff.isBlocked == false',ng-click='ban($index)',title='Ban')
+          i.glyphicon.glyphicon-ban-circle
+        a(href='',ng-if='staff.isBlocked == true',ng-click='unban($index)',title='Unban')
+          i.glyphicon.glyphicon-ban-circle
