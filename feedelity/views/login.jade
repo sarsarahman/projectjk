@@ -1,22 +1,57 @@
 extends layout
 
 block body
-  .container
-    form.form-signin(ng-controller='LoginCtrl')
-      h2.form-signin-heading Please sign in
-      label(for='inputUsername') Username
-      input#inputUsername.form-control(autofocus='', placeholder='username', required='', type='text')
-      label(for='inputPassword') Password
-      input#inputPassword.form-control(placeholder='Password', required='', type='password')
-      .checkbox
-        label
-          input(type='checkbox', value='remember-me')
-          |  Remember me
-      .alert.alert-danger(role='alert', style='display:none;')
-        span.glyphicon.glyphicon-exclamation-sign(aria-hidden='true')
-        span.sr-only Error: 
-        span#loginError 
-      input.btn.btn-lg.btn-primary.btn-block#btnLogin(type='button', value='Signin')
+  body.hold-transition.login-page
+    .login-box
+      .login-box-body
+        p.login-box-msg Sign in to start your session
+        form(ng-controller='LoginCtrl')
+          .form-group.has-feedback
+            input#inputUsername.form-control(type='text', placeholder='Username', autofocus, required)
+            span.glyphicon.glyphicon-user.form-control-feedback
+          .form-group.has-feedback
+            input#inputPassword.form-control(type='password', placeholder='Password', required)
+            span.glyphicon.glyphicon-lock.form-control-feedback
+          .row
+            .col-xs-8
+              .checkbox.icheck
+                label
+                  input(type='checkbox')
+                  |  Remember Me
+            .col-xs-4
+              button.btn.btn-primary.btn-block.btn-flat#btnLogin(type='button') Sign In
+        //- .social-auth-links.text-center
+        //-   p - OR -
+        //-   a.btn.btn-block.btn-social.btn-facebook.btn-flat(href='#')
+        //-     i.fa.fa-facebook
+        //-     |  Sign in using
+        //-     |         Facebook
+        //-   a.btn.btn-block.btn-social.btn-google.btn-flat(href='#')
+        //-     i.fa.fa-google-plus
+        //-     |  Sign in using
+        //-     |         Google+
+        //- // /.social-auth-links
+        //- a(href='#') I forgot my password
+        //- br
+        //- a.text-center(href='register.html') Register a new membership
+    
+    //- jQuery 2.2.0
+    script(src='plugins/jQuery/jQuery-2.2.0.min.js')
+    //- script(src='js/lib/jquery/jquery-2.0.3.min.js')
 
-  script(src='js/lib/jquery/jquery-2.0.3.min.js')
-  script(src='js/login.js')
+    script(src='js/login.js')
+    
+    //- Bootstrap 3.3.6
+    //- script(src='../../bootstrap/js/bootstrap.min.js')
+    script(src='bootstrap/js/bootstrap.min.js')
+    
+    //- iCheck
+    script(src='plugins/iCheck/icheck.min.js')
+    script.
+      $(function () {
+      $('input').iCheck({
+      checkboxClass: 'icheckbox_square-blue',
+      radioClass: 'iradio_square-blue',
+      increaseArea: '20%' // optional
+      });
+      });

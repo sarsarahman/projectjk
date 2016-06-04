@@ -1,0 +1,74 @@
+extends layout
+
+block body
+  .container(ng-controller='FeedelityCtrl')
+    .row
+      .col-xs-2#menu.nav.nav-pills.nav-stacked
+        ul.nav.nav-pills.nav-stacked#sidebar
+          li
+            a(href='', ng-click='refresh()')
+              i.glyphicon.glyphicon-refresh
+              span.menu-item.hidden-xs Fetch Feeds
+          li
+            a(href="articles/pending")
+              i.glyphicon.glyphicon-file
+              span.menu-item.hidden-xs Pending
+          li
+            a(href="articles/approved")
+              i.glyphicon.glyphicon-ok
+              span.menu-item.hidden-xs Approved
+          li
+            a(href="articles/starred")
+              i.glyphicon.glyphicon-star
+              span.menu-item.hidden-xs Starred
+          li
+            a(href="feeds")
+              i.glyphicon.glyphicon-wrench
+              span.menu-item.hidden-xs Config
+          li
+            a(href="cats")
+              i.glyphicon.glyphicon-bookmark
+              span.menu-item.hidden-xs Categories
+          li
+            a(href="tags")
+              i.glyphicon.glyphicon-tags
+              span.menu-item.hidden-xs Tags
+          li
+            a(href="locations")
+              i.glyphicon.glyphicon-map-marker
+              span.menu-item.hidden-xs Locations
+          if user.adminLevel === 1
+            li
+              a(href="staffs")
+                i.glyphicon.glyphicon-user
+                span.menu-item.hidden-xs Staffs
+            li
+              a(href="users")
+                i.glyphicon.glyphicon-user
+                span.menu-item.hidden-xs Users
+          li
+            a(href="", ng-click='logout()')
+              i.glyphicon.glyphicon-log-out
+              span.menu-item.hidden-xs Log Out
+      .col-xs-10#view(ng-view)
+
+  script(src='js/lib/jquery/jquery-2.0.3.min.js')
+  script(src='js/lib/jquery/jquery.timeago.js')
+  script(src='http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false')
+  script(src='bootstrap/js/bootstrap.min.js')
+  script(src='js/bootstrap-dialog.min.js')
+  script(src='js/lib/angular/angular.js')
+  script(src='js/lib/angular/angular-route.js')
+  script(src="js/lib/angular/angular-sanitize.min.js")
+  script(src="js/lib/angular/select.js")
+  script(src="js/lib/angular/ng-file-upload.min.js")
+  script(src="js/lib/angular/ng-file-upload-shim.min.js")
+  script(src="js/lib/angular/ui-bootstrap-tpls.js")
+  script(src="js/lib/angular/datetimepicker.js")
+  script(src="js/lib/angular/ngAutocomplete.js")
+  script(src='js/app.js')
+  script(src='js/services.js')
+  script(src='js/controllers.js')
+  script(src='js/filters.js')
+  script(src='js/directives.js')
+  script(src='js/lib/affix.js')

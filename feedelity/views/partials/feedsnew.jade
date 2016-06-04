@@ -1,0 +1,91 @@
+section.content-header
+  h1 Feeds configuration
+  ol.breadcrumb
+    li
+      a(href='/')
+        i.fa.fa-dashboard
+        |  Home
+    li.active Config Feeds
+
+section.content
+  #form-feed.hidden-xs
+    form.form-inline.pull-right(role='form', name='addFeedForm')
+      .form-group
+        label.sr-only(for='addUrl') URL
+        input.input-sm.form-control#addUrl(type="url", name="addUrl", placeholder='Enter URL', size='60', ng-model="addFeed.url", required) 
+      button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+        i.glyphicon.glyphicon-plus
+        |  Add
+    .clear
+  #table-feed
+    table.table.table-condensed.table-striped
+      thead
+        tr
+          th Name
+          th State
+          th Last checked
+          th Category
+          th Location
+          th Fetched
+          th Outdated
+          th Errors
+          
+      tbody
+        tr(ng-repeat='feed in feeds track by $index')
+          td 
+            a(href='{{feed.url}}', target='new') {{feed.name}}
+            a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modFeed", title="Edit") 
+              i.glyphicon.glyphicon-pencil
+            a(href="/feeds", ng-click="delete($index)", title="Delete") 
+              i.glyphicon.glyphicon-remove
+          td
+            span.label(ng-class="bpFeedStatus(feed.state)") {{feed.state}}
+          td 
+            span {{feed.lastChecked | timeago}}
+          td
+            span {{ feed.category.name }}
+          td
+            span {{ feed.location.name }}
+          td 
+            span.badge {{ feed.lastFetchedNb }}
+          td
+            span.badge {{ feed.lastOutdatedNb }}
+          td
+            span.badge {{ feed.lastErrorNb }}
+
+.modal.fade#modFeed(tabindex="-1", role="dialog", aria-labelledby="Edit feed", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modFeedLbl.modal-title Edit feed
+      .modal-body
+        form(role='form', name='editFeedForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUrl') URL
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          | &nbsp;
+          .form-group
+            label(for='editCat', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
+          .form-group
+            label(for='editCat', size='30') Category {{categoryDropDown.selected}}
+            //- ui-select(id='editCat',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$select.selected.name}}
+              ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='category.name | highlight: $select.search')
+            ui-select(id='editCat',multiple='',ng-model='editFeed.category', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an category...') {{$item.name}}
+              ui-select-choices(repeat='category in categorys | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='category.name | highlight: $select.search')
+          .form-group
+            label(for='editLocation', size='30') Location {{locationDropDown.selected}}
+            ui-select(id='editLocation',multiple='',ng-model='editFeed.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Enter an address...') {{$item.name}}
+              ui-select-choices(repeat='location in locations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='location.name | highlight: $select.search')
+                    
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save

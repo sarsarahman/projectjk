@@ -3,6 +3,7 @@
 var request = require('request'),
     FeedParser = require('feedparser'),
     async = require('async'),
+    moment = require('moment'),
     mongoose = require('mongoose'),
     conf = require('../config.json'),
     fs = require('fs'),
@@ -91,7 +92,11 @@ var userSchema = mongoose.Schema({
     },
     userFbLikes: [String],
     dp: String,
-    status: Boolean
+    status: Boolean,
+    registeredOn: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 var staffSchema = mongoose.Schema({
@@ -104,6 +109,10 @@ var staffSchema = mongoose.Schema({
     location: String,
     dp: String,
     status: Boolean,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
     isBlocked : {
         type: Boolean,
         default: false
@@ -111,6 +120,100 @@ var staffSchema = mongoose.Schema({
     adminLevel : {
         type: Number,
         default: 2
+    },
+    registeredOn: {
+        type: Date,
+        default: Date.now
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date,
+    addFeeds: {
+        type: Boolean,
+        default: false
+    },
+    updateFeeds: {
+        type: Boolean,
+        default: false
+    },
+    delFeeds: {
+        type: Boolean,
+        default: false
+    },
+    addArticles: {
+        type: Boolean,
+        default: false
+    },
+    updateArticles: {
+        type: Boolean,
+        default: false
+    },
+    delArticles: {
+        type: Boolean,
+        default: false
+    },
+    addCategories: {
+        type: Boolean,
+        default: false
+    },
+    updateCategories: {
+        type: Boolean,
+        default: false
+    },
+    delCategories: {
+        type: Boolean,
+        default: false
+    },
+    addLocations: {
+        type: Boolean,
+        default: false
+    },
+    updateLocations: {
+        type: Boolean,
+        default: false
+    },
+    delLocations: {
+        type: Boolean,
+        default: false
+    },
+    addTags: {
+        type: Boolean,
+        default: false
+    },
+    updateTags: {
+        type: Boolean,
+        default: false
+    },
+    delTags: {
+        type: Boolean,
+        default: false
+    },
+    addStaffs: {
+        type: Boolean,
+        default: false
+    },
+    updateStaffs: {
+        type: Boolean,
+        default: false
+    },
+    delStaffs: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -201,17 +304,83 @@ var articleSchema = mongoose.Schema({
 var tagSchema = mongoose.Schema({
     name: String,
     boostValue: String,
-    imgUrl: String
+    imgUrl: String,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
 });
 
 var catSchema = mongoose.Schema({
     name: String,
-    imgUrl: String
+    imgUrl: String,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
 });
 
 var locationSchema = mongoose.Schema({
     name: String,
-    details: Object
+    details: Object,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
 });
 
 var likeSchema = mongoose.Schema({
@@ -251,6 +420,85 @@ var preferredTagSchema = mongoose.Schema({
     }]
 });
 
+var staffRoleSchema = mongoose.Schema({
+    staffId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addFeeds: {
+        type: Boolean,
+        default: false
+    },
+    updateFeeds: {
+        type: Boolean,
+        default: false
+    },
+    delFeeds: {
+        type: Boolean,
+        default: false
+    },
+    addArticles: {
+        type: Boolean,
+        default: false
+    },
+    updateArticles: {
+        type: Boolean,
+        default: false
+    },
+    delArticles: {
+        type: Boolean,
+        default: false
+    },
+    addCategories: {
+        type: Boolean,
+        default: false
+    },
+    updateCategories: {
+        type: Boolean,
+        default: false
+    },
+    delCategories: {
+        type: Boolean,
+        default: false
+    },
+    addLocations: {
+        type: Boolean,
+        default: false
+    },
+    updateLocations: {
+        type: Boolean,
+        default: false
+    },
+    delLocations: {
+        type: Boolean,
+        default: false
+    },
+    addTags: {
+        type: Boolean,
+        default: false
+    },
+    updateTags: {
+        type: Boolean,
+        default: false
+    },
+    delTags: {
+        type: Boolean,
+        default: false
+    },
+    addStaffs: {
+        type: Boolean,
+        default: false
+    },
+    updateStaffs: {
+        type: Boolean,
+        default: false
+    },
+    delStaffs: {
+        type: Boolean,
+        default: false
+    }
+});
+
 
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
@@ -263,6 +511,7 @@ AdminUser = mongoose.model('AdminUser', adminUserSchema);
 Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
+StaffRole = mongoose.model('staffrole', staffRoleSchema);
 
 exports.userLogin = function(userData, callback) {
 
@@ -334,6 +583,43 @@ exports.fetchUsers = function(req, res) {
 
 }
 
+// ^StaffRole
+exports.getstaffRole = function(req, res) {
+    StaffRole.find().exec(function(err, staffroles) {
+        if(err) console.log('getstaffRole err:', err);
+        else res.json(staffroles);
+    });
+}
+
+exports.updatestaffRole = function(req, res) {
+    StaffRole.findOneAndUpdate({
+        staffId: req.params.staffid
+    }, {
+        staffId: req.body.staffId,
+        addFeeds: req.body.addFeeds,
+        updateFeeds: req.body.updateFeeds,
+        delFeeds: req.body.delFeeds,
+        addArticles: req.body.addArticles,
+        updateArticles: req.body.updateArticles,
+        delArticles: req.body.delArticles,
+        addCategories: req.body.addCategories,
+        updateCategories: req.body.updateCategories,
+        delCategories: req.body.delCategories,
+        addLocations: req.body.addLocations,
+        updateLocations: req.body.updateLocations,
+        delLocations: req.body.delLocations,
+        addTags: req.body.addTags,
+        updateTags: req.body.updateTags,
+        delTags: req.body.delTags,
+        addStaffs: req.body.addStaffs,
+        updateStaffs: req.body.updateStaffs,
+        delStaffs: req.body.delStaffs
+    }, {new:true}).exec(function(err, staffroles) {
+        if(err) console.log('updatestaffRole err:', err);
+        else res.json(staffroles);
+    });
+}
+// $StaffRole
 
 // ^Staffs
 exports.staffLogin = function(userData, callback) {
@@ -347,7 +633,25 @@ exports.staffLogin = function(userData, callback) {
     //     location: 'Chennai',
     //     dp: 'String',
     //     status: true,
-    //     adminLevel: 1
+    //     adminLevel: 1,
+    //     addFeeds: true,
+    //     updateFeeds: true,
+    //     delFeeds: true,
+    //     addArticles: true,
+    //     updateArticles: true,
+    //     delArticles: true,
+    //     addCategories: true,
+    //     updateCategories: true,
+    //     delCategories: true,
+    //     addLocations: true,
+    //     updateLocations: true,
+    //     delLocations: true,
+    //     addTags: true,
+    //     updateTags: true,
+    //     delTags: true,
+    //     addStaffs: true,
+    //     updateStaffs: true,
+    //     delStaffs: true
     // });
 
     // Staff.create(addStaff).then(function(addStaff) {
@@ -378,6 +682,14 @@ exports.fetchStaffs = function(req, res) {
     });
 }
 
+exports.getStaffs = function(req, res) {
+    Staff.find({adminLevel:2}).sort({
+        date: -1
+    }).exec().then(function(staffs) {
+        res.json(staffs);
+    });
+}
+
 exports.addStaff = function(req, res) {
     var username = req.body.username;
     var password = req.body.password;
@@ -390,10 +702,15 @@ exports.addStaff = function(req, res) {
         mobileNumber: '',
         location: 'Chennai',
         dp: '',
-        status: true
+        status: true,
+        addedBy: req.user._id,
+        addedOn: Date.now()
     });
     Staff.create(addStaff).then(function(addStaff) {
         res.status(200).send(addStaff);
+        // new StaffRole({
+        //     staffId: addStaff._id
+        // }).save();
     });
 }
 
@@ -421,7 +738,27 @@ exports.updateStaff = function(req, res) {
         email: email,
         gender: gender,
         mobileNumber: mobile,
-        location: location
+        location: location,
+        updatedBy: req.user._id,
+        updatedOn: Date.now(),
+        addFeeds: req.body.addFeeds,
+        updateFeeds: req.body.updateFeeds,
+        delFeeds: req.body.delFeeds,
+        addArticles: req.body.addArticles,
+        updateArticles: req.body.updateArticles,
+        delArticles: req.body.delArticles,
+        addCategories: req.body.addCategories,
+        updateCategories: req.body.updateCategories,
+        delCategories: req.body.delCategories,
+        addLocations: req.body.addLocations,
+        updateLocations: req.body.updateLocations,
+        delLocations: req.body.delLocations,
+        addTags: req.body.addTags,
+        updateTags: req.body.updateTags,
+        delTags: req.body.delTags,
+        addStaffs: req.body.addStaffs,
+        updateStaffs: req.body.updateStaffs,
+        delStaffs: req.body.delStaffs
     }
     Staff.findOneAndUpdate(query, update).exec().then(function(staff) {
         res.status(200).send(staff);
@@ -430,8 +767,15 @@ exports.updateStaff = function(req, res) {
 
 exports.delStaff = function(req, res) {
     var id = req.params.id;
-    Staff.remove({
-        _id: id
+    // Staff.remove({
+    //     _id: id
+    // }).exec().then(function(staff) {
+    //     res.status(200).send();
+    // });
+    Staff.findByIdAndUpdate(id, {
+        isActive:false,
+        deletedBy: req.user._id,
+        deletedOn: Date.now()
     }).exec().then(function(staff) {
         res.status(200).send();
     });
@@ -777,7 +1121,188 @@ exports.refreshFeeds = function(req, res) {
                 }).where('date').lt(bound).exec().then(function(nbArticles) {
                     res.json(feeds);
                 });
-            } else res.json(feeds);
+            // } else res.json(feeds);
+            } else {
+                // Article.find().exec(function(err, articles) {
+                //     if(err) console.log('refreshFeeds article err:', err);
+                //     else res.json([feeds, articles]);
+                // });
+
+                var allCounts = {};
+                async.parallel([
+                    //Count approved articles
+                    function(callback) {
+                        Article.count({approved:true}, function(err, count) {
+                            console.log('approved article count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.approvedArticlesCount = count;
+                            callback();
+                        });
+                    },
+                    //Count pending articles
+                    function(callback) {
+                        Article.count({approved:false}, function(err, count) {
+                            console.log('pending article count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.pendingArticlesCount = count;
+                            callback();
+                        });
+                    },
+                    //Count starred articles
+                    function(callback) {
+                        Article.count({starred:true}, function(err, count) {
+                            console.log('starred article count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.starredArticlesCount = count;
+                            callback();
+                        });
+                    },
+                    //Count all articles
+                    function(callback) {
+                        Article.count({}, function(err, count) {
+                            console.log('all articles count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.allArticlesCount = count;
+                            callback();
+                        });
+                    },
+                    //Count all feeds
+                    function(callback) {
+                        Feed.count({}, function(err, count) {
+                            console.log('all feeds count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.allFeedsCount = count;
+                            callback();
+                        });
+                    },
+                    //Count feeds added today
+                    function(callback) {
+                        Feed.count({
+                            $and:[{
+                                addedOn:{$gte: moment.utc().startOf('day').toDate()}
+                            },{
+                                addedOn:{$lte: moment.utc().endOf('day').toDate()}
+                            }]
+                        }, function(err, count) {
+                            console.log('feeds added today count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.feedsAddedTodayCount = count;
+                            callback();
+                        });
+                    },
+                    //Count all staffs
+                    function(callback) {
+                        Staff.count({}, function(err, count) {
+                            console.log('staff count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.staffsCount = count;
+                            callback();
+                        });
+                    },
+                    //Count staffs registered today
+                    function(callback) {
+                        Staff.count({
+                            $and:[{
+                                registeredOn:{$gte: moment.utc().startOf('day').toDate()}
+                            },{
+                                registeredOn:{$lte: moment.utc().endOf('day').toDate()}
+                            }]}, function(err, count) {
+                            console.log('staffs registered count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.staffRegisteredTodayCount = count;
+                            callback();
+                        });
+                    },
+                    //Count articles added today
+                    function(callback) {
+                        Article.count({
+                            $and:[{
+                                addedOn:{$gte: moment.utc().startOf('day').toDate()}
+                            },{
+                                addedOn:{$lte: moment.utc().endOf('day').toDate()}
+                            }]}, function(err, count) {
+                            console.log('articles added today count : ' + count);
+                            if(err) return callback(err);
+                            allCounts.articlesAddedTodayCount = count;
+                            callback();
+                        });
+                    }
+                ], function(err) {
+                    if (err) return next(err);
+                    res.json([feeds, allCounts]);
+                });
+            } // end ifelse
+        });
+    });
+}
+
+function refreshFeed(feed, callBack) {
+    var articles = [];
+    var feedMeta;
+    var errors = 0;
+    var outdated = 0;
+    var req = request(feed.url);
+    var feedParser = new FeedParser();
+    req.on('error', function(error) {
+        callBack(error);
+    });
+    req.on('response', function(res) {
+        var stream = this;
+        if (res.statusCode != 200) callback(new Error('Bad status code'));
+        stream.pipe(feedParser);
+    });
+    feedParser.on('error', function(error) {
+        callBack(error);
+    });
+    feedParser.on('meta', function(meta) {
+        feedMeta = this.meta;
+    });
+    feedParser.on('readable', function() {
+        var stream = this;
+        var item
+        while (item = stream.read()) {
+            var candidate = extractArticle(item, feed);
+            if (checkValues(candidate)) {
+                if (checkPeriod(candidate)) articles.push(candidate);
+                else outdated++;
+            } else errors++;
+        }
+        console.log('candidate:', candidate);
+    });
+    feedParser.on('end', function() {
+        var guids = articles.map(function(article) {
+            return article.guid;
+        });
+        Article.find({
+            _feed: feed._id
+        }).where('guid').in(guids).exec().then(function(existingArticles) {
+            var existingGuids = existingArticles.map(function(article) {
+                return article.guid;
+            });
+            var newArticles = [];
+            for (var i = 0; i < articles.length; i++) {
+                var cur = articles[i];
+                cur.addedBy = userId;
+                if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
+            }
+
+            Article.create(newArticles, function(err) {
+                var state = (errors > 0) ? 'Incomplete' : 'OK';
+                var values = {
+                    lastChecked: new Date(),
+                    lastFetchedNb: newArticles.length,
+                    lastErrorNb: errors,
+                    lastOutdatedNb: outdated,
+                    state: state,
+                    likes: 0,
+                    dislikes: 0
+                };
+                Feed.findOneAndUpdate({
+                    _id: feed._id
+                }, values).exec().then(function(feed) {
+                    callBack(null, feed);
+                });
+            });
         });
     });
 }
@@ -829,7 +1354,6 @@ exports.delFeed = function(req, res) {
 
 exports.addFeed = function(req, res) {
     var url = req.body.url;
-
 
     var categoryId = [];
     var locationId = [];
@@ -892,91 +1416,30 @@ exports.updateFeed = function(req, res) {
     });
 }
 
-function refreshFeed(feed, callBack) {
-    var articles = [];
-    var feedMeta;
-    var errors = 0;
-    var outdated = 0;
-    var req = request(feed.url);
-    var feedParser = new FeedParser();
-    req.on('error', function(error) {
-        callBack(error);
-    });
-    req.on('response', function(res) {
-        var stream = this;
-        if (res.statusCode != 200) callback(new Error('Bad status code'));
-        stream.pipe(feedParser);
-    });
-    feedParser.on('error', function(error) {
-        callBack(error);
-    });
-    feedParser.on('meta', function(meta) {
-        feedMeta = this.meta;
-    });
-    feedParser.on('readable', function() {
-        var stream = this;
-        var item
-        while (item = stream.read()) {
-            var candidate = extractArticle(item, feed);
-            if (checkValues(candidate)) {
-                if (checkPeriod(candidate)) articles.push(candidate);
-                else outdated++;
-            } else errors++;
-        }
-    });
-    feedParser.on('end', function() {
-        var guids = articles.map(function(article) {
-            return article.guid;
-        });
-        Article.find({
-            _feed: feed._id
-        }).where('guid').in(guids).exec().then(function(existingArticles) {
-            var existingGuids = existingArticles.map(function(article) {
-                return article.guid;
-            });
-            var newArticles = [];
-            for (var i = 0; i < articles.length; i++) {
-                var cur = articles[i];
-                cur.addedBy = userId;
-                if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
-            }
-
-            Article.create(newArticles, function(err) {
-                var state = (errors > 0) ? 'Incomplete' : 'OK';
-                var values = {
-                    lastChecked: new Date(),
-                    lastFetchedNb: newArticles.length,
-                    lastErrorNb: errors,
-                    lastOutdatedNb: outdated,
-                    state: state,
-                    likes: 0,
-                    dislikes: 0
-                };
-                Feed.findOneAndUpdate({
-                    _id: feed._id
-                }, values).exec().then(function(feed) {
-                    callBack(null, feed);
-                });
-            });
-        });
-    });
-}
-
 // Articles functions
 
 exports.getPendingArticles = function(req, res) {
     var paginate = 20;
     var page = req.params.page;
     // var page = 0;
-    Article.find({
-        approved: false,
-        isActive: true
-    }).sort({
-        date: -1
-    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
-        articles.sort(compareArticles);
-        res.json(articles);
-    });
+    // if(req.user.adminLevel === 1) {
+    //     Article.find({approved: false}).sort({
+    //         date: -1
+    //     }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
+    //         articles.sort(compareArticles);
+    //         res.json(articles);
+    //     });
+    // } else {
+        Article.find({
+            approved: false,
+            isActive: true
+        }).sort({
+            date: -1
+        }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec().then(function(articles) {
+            articles.sort(compareArticles);
+            res.json(articles);
+        });
+    // }
 }
 
 exports.getApprovedArticles = function(req, res) {
@@ -1011,9 +1474,139 @@ exports.getStarredArticles = function(req, res) {
     });
 }
 
+exports.getDeletedArticles = function(req, res) {
+    var paginate = 20;
+    var page = req.params.page;
+    Article.find({
+        isActive: false
+    }).sort({
+        date: -1
+    }).skip(page * paginate).limit(paginate).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').skip(0).limit(10).exec().then(function(articles) {
+        articles.sort(compareArticles);
+        res.json(articles);
+    });
+}
+
+exports.getCounts = function(req, res) {
+    var allCounts = {};
+    async.parallel([
+        //Count approved articles
+        function(callback) {
+            Article.count({approved:true}, function(err, count) {
+                console.log('approved article count : ' + count);
+                if(err) return callback(err);
+                allCounts.approvedArticlesCount = count;
+                callback();
+            });
+        },
+        //Count pending articles
+        function(callback) {
+            Article.count({approved:false}, function(err, count) {
+                console.log('pending article count : ' + count);
+                if(err) return callback(err);
+                allCounts.pendingArticlesCount = count;
+                callback();
+            });
+        },
+        //Count starred articles
+        function(callback) {
+            Article.count({starred:true}, function(err, count) {
+                console.log('starred article count : ' + count);
+                if(err) return callback(err);
+                allCounts.starredArticlesCount = count;
+                callback();
+            });
+        },
+        //Count deleted articles
+        function(callback) {
+            Article.count({isActive:false}, function(err, count) {
+                console.log('deleted article count : ' + count);
+                if(err) return callback(err);
+                allCounts.deletedArticlesCount = count;
+                callback();
+            });
+        },
+        //Count all articles
+        function(callback) {
+            Article.count({}, function(err, count) {
+                console.log('all articles count : ' + count);
+                if(err) return callback(err);
+                allCounts.allArticlesCount = count;
+                callback();
+            });
+        },
+        //Count all feeds
+        function(callback) {
+            Feed.count({}, function(err, count) {
+                console.log('all feeds count : ' + count);
+                if(err) return callback(err);
+                allCounts.allFeedsCount = count;
+                callback();
+            });
+        },
+        //Count feeds added today
+        function(callback) {
+            Feed.count({
+                $and:[{
+                    addedOn:{$gte: moment.utc().startOf('day').toDate()}
+                },{
+                    addedOn:{$lte: moment.utc().endOf('day').toDate()}
+                }]
+            }, function(err, count) {
+                console.log('feeds added today count : ' + count);
+                if(err) return callback(err);
+                allCounts.feedsAddedTodayCount = count;
+                callback();
+            });
+        },
+        //Count all staffs
+        function(callback) {
+            Staff.count({}, function(err, count) {
+                console.log('staff count : ' + count);
+                if(err) return callback(err);
+                allCounts.staffsCount = count;
+                callback();
+            });
+        },
+        //Count staffs registered today
+        function(callback) {
+            Staff.count({
+                $and:[{
+                    registeredOn:{$gte: moment.utc().startOf('day').toDate()}
+                },{
+                    registeredOn:{$lte: moment.utc().endOf('day').toDate()}
+                }]}, function(err, count) {
+                console.log('staffs registered count : ' + count);
+                if(err) return callback(err);
+                allCounts.staffRegisteredTodayCount = count;
+                callback();
+            });
+        },
+        //Count articles added today
+        function(callback) {
+            Article.count({
+                $and:[{
+                    addedOn:{$gte: moment.utc().startOf('day').toDate()}
+                },{
+                    addedOn:{$lte: moment.utc().endOf('day').toDate()}
+                }]}, function(err, count) {
+                console.log('articles added today count : ' + count);
+                if(err) return callback(err);
+                allCounts.articlesAddedTodayCount = count;
+                callback();
+            });
+        }
+    ], function(err) {
+        if (err) return next(err);
+        res.json(allCounts);
+    });
+}
+
 exports.getArticle = function(req, res) {
     var id = req.params.id;
-    var article = Article.findById(id).populate('_feed', 'name').populate('tags', 'name').populate('location', 'name').populate('category', 'name').exec();
+    var article = Article.findById(id).populate({
+        path: '_feed', match: {isActive: true}, select:'name'
+    }).populate('tags', 'name').populate({path:'location', match:{isActive:true}, select:'name'}).populate('category', 'name').exec();
     article.then(function(article) {
         res.json(article);
     });
@@ -1090,9 +1683,12 @@ exports.updateArticle = function(req, res) {
         // } else {
         //     categoryId = '';
         // };
-        for(var i in req.body.category) {
-            categoryId.push(req.body.category[i]._id);
-        }
+        // for(var i in req.body.category) {
+        //     categoryId.push(req.body.category[i]._id);
+        // }
+        categoryId = req.body.category.map(function(cat) {
+            return cat._id;
+        });
     };
 
     if (req.body.location) {
@@ -1101,9 +1697,12 @@ exports.updateArticle = function(req, res) {
         // } else {
         //     locationId = '';
         // };
-        for(var i in req.body.location) {
-            locationId.push(req.body.location[i]._id);
-        }
+        // for(var i in req.body.location) {
+        //     locationId.push(req.body.location[i]._id);
+        // }
+        locationId = req.body.location.map(function(loc) {
+            return loc._id;
+        });
     };
 
 
@@ -1162,6 +1761,121 @@ exports.updateArticle = function(req, res) {
     });
 }
 
+exports.bulkupdateArticle = function(req, res) {
+    var tagIds = [],
+        categoryIds = [],
+        locationIds = [];
+    if (req.body[0].tags.length > 0) {
+        tagIds = req.body[0].tags.map(function(tag) {
+            return tag._id;
+        });
+    };
+
+    if (req.body[0].category.length > 0) {
+        categoryIds = req.body[0].category.map(function(category) {
+            return category._id;
+        });
+    };
+
+    if (req.body[0].location.length > 0) {
+        locationIds = req.body[0].location.map(function(location) {
+            return location._id;
+        });
+    };
+    var bulkupdatedArticles = [];
+    async.eachSeries(req.body, function(article, cb) {
+        Article.findByIdAndUpdate(article._id, {
+            starred: article.starred,
+            approved: article.approved,
+            name: article.name,
+            title: article.title,
+            summary: article.summary,
+            date: Date.parse(article.date),
+            imgUrl: article.imgUrl,
+            // category: categoryIds,
+            // tags: tagIds,
+            // location: locationIds,
+            description: article.description,
+            author: article.author,
+            link: article.link,
+            guid: article.guid,
+            updatedBy: req.user._id,
+            updatedOn: new Date()
+        }, {new:true}).exec(function(err, article) {
+            if(err) console.log('bulkupdate findByIdAndUpdate err:', err);
+            // else bulkupdatedArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('async bulkupdateArticle err:', err);
+        // res.status(200).send(bulkupdatedArticles);
+    });
+
+    async.eachSeries(req.body, function(article, cb) {
+        Article.findByIdAndUpdate(article._id, {
+            $addToSet:{category:{$each:categoryIds}},
+            $addToSet:{tags:{$each:tagIds}},
+            $addToSet:{location:{$each:locationIds}}
+        }, {new:true}).exec(function(err, article) {
+            if(err) console.log('addtoset bulkupdate findByIdAndUpdate err:', err);
+            else bulkupdatedArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('addtoset async bulkupdateArticle err:', err);
+        res.status(200).send(bulkupdatedArticles);
+    });
+}
+
+exports.approveArticles = function(req, res) {
+    var approvedArticles = [];
+    async.eachSeries(req.body, function(articleId, cb) {
+        Article.findByIdAndUpdate(articleId, {
+            $set:{
+                approved:true,
+                updatedBy: req.user._id,
+                updatedOn: Date.now()
+            }
+        }).exec(function(err, article) {
+            if(err) console.log('approve articles err:', err);
+            else approvedArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('approveArticles async err:', err);
+        res.status(200).send(approvedArticles);
+    });
+}
+
+exports.disapproveArticles = function(req, res) {
+    var disapprovedArticles = [];
+    async.eachSeries(req.body, function(articleId, cb) {
+        Article.findByIdAndUpdate(articleId, {
+            $set:{
+                approved:false,
+                updatedBy: req.user._id,
+                updatedOn: Date.now()
+            }
+        }).exec(function(err, article) {
+            if(err) console.log('disapprove articles err:', err);
+            else disapprovedArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('disapproveArticles async err:', err);
+        res.status(200).send(disapprovedArticles);
+    });
+}
+
+exports.starArticle = function(req, res) {
+    var id = req.params.id;
+    Article.findByIdAndUpdate(id, { $set: {
+        starred: req.body.starred
+    }} ).exec().then(function(article) {
+        res.status(200).send(article);
+    });
+}
+
 exports.delArticle = function(req, res) {
     var id = req.params.id;
     Article.findByIdAndUpdate(id, { $set: {
@@ -1170,6 +1884,26 @@ exports.delArticle = function(req, res) {
         deletedOn: new Date()
     }} ).exec().then(function(article) {
         res.status(200).send(article);
+    });
+}
+
+exports.delselectedArticles = function(req, res) {
+    var delselectedArticles = [];
+    async.eachSeries(req.body, function(articleId, cb) {
+        Article.findByIdAndUpdate(articleId, {
+            $set:{
+                isActive: false,
+                deletedBy: req.user._id,
+                deletedOn: Date.now()
+            }
+        }).exec(function(err, article) {
+            if(err) console.log('delselected articles err:', err);
+            else delselectedArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('delselectedArticles async err:', err);
+        res.status(200).send(delselectedArticles);
     });
 }
 
@@ -1540,15 +2274,22 @@ exports.getCategory = function(req, res) {
 }
 
 exports.getCategorys = function(req, res) {
-    Category.find().exec().then(function(categorys) {
+    Category.find({isActive:true}).exec().then(function(categorys) {
         res.json(categorys);
     });
 }
 
 exports.delCategory = function(req, res) {
     var id = req.params.id;
-    Category.remove({
-        _id: id
+    // Category.remove({
+    //     _id: id
+    // }).exec().then(function(category) {
+    //     res.status(200).send();
+    // });
+    Category.findByIdAndUpdate(id, {
+        isActive:false,
+        deletedBy: req.user._id,
+        deletedOn: Date.now()
     }).exec().then(function(category) {
         res.status(200).send();
     });
@@ -1557,7 +2298,9 @@ exports.delCategory = function(req, res) {
 exports.addCategory = function(req, res) {
     var name = req.body.name;
     addCategory = new Category({
-        name: name
+        name: name,
+        addedBy: req.user._id,
+        addedOn: Date.now()
     });
     Category.create(addCategory).then(function(addCategory) {
         res.status(200).send(addCategory);
@@ -1572,7 +2315,9 @@ exports.updateCategory = function(req, res) {
     var imgUrl = req.body.imgUrl || '';
     var update = {
         name: name,
-        imgUrl: imgUrl
+        imgUrl: imgUrl,
+        updatedBy: req.user._id,
+        updatedOn: Date.now()
     }
     // Category.findOneAndUpdate(query, update).exec().then(function(category) {
     //     res.status(200).send(category);
@@ -1593,7 +2338,7 @@ exports.getTag = function(req, res) {
 }
 
 exports.getTags = function(req, res) {
-    Tag.find().exec().then(function(tags) {
+    Tag.find({isActive:true}).exec().then(function(tags) {
         res.json(tags);
     });
 }
@@ -1609,8 +2354,15 @@ exports.getAllTags = function(req, res) {
 
 exports.delTag = function(req, res) {
     var id = req.params.id;
-    Tag.remove({
-        _id: id
+    // Tag.remove({
+    //     _id: id
+    // }).exec().then(function(tag) {
+    //     res.status(200).send();
+    // });
+    Tag.findByIdAndUpdate(id, {
+        isActive:false,
+        deletedBy: req.user._id,
+        deletedOn: Date.now()
     }).exec().then(function(tag) {
         res.status(200).send();
     });
@@ -1621,7 +2373,9 @@ exports.addTag = function(req, res) {
     var boostValue = req.body.boostValue;
     addTag = new Tag({
         name: name,
-        boostValue: boostValue
+        boostValue: boostValue,
+        addedBy: req.user._id,
+        addedOn: Date.now()
     });
     Tag.create(addTag).then(function(addTag) {
         res.status(200).send(addTag);
@@ -1638,10 +2392,14 @@ exports.updateTag = function(req, res) {
     var update = {
         name: name,
         boostValue: boostValue,
-        imgUrl: imgUrl
+        imgUrl: imgUrl,
+        updatedBy: req.user._id,
+        updatedOn: Date.now()
     }
-    Tag.findOneAndUpdate(query, update).exec().then(function(tag) {
-        res.status(200).send(tag);
+    // Tag.findOneAndUpdate(query, update).exec().then(function(tag) {
+    Tag.findOneAndUpdate(query, update).exec(function(err, tag) {
+        if(err) console.log('updateTag err:', err);
+        else res.status(200).send(tag);
     });
 }
 
@@ -1656,15 +2414,22 @@ exports.getLocation = function(req, res) {
 }
 
 exports.getLocations = function(req, res) {
-    Local.find().exec().then(function(locations) {
+    Local.find({isActive:true}).exec().then(function(locations) {
         res.json(locations);
     });
 }
 
 exports.delLocation = function(req, res) {
     var id = req.params.id;
-    Local.remove({
-        _id: id
+    // Local.remove({
+    //     _id: id
+    // }).exec().then(function(location) {
+    //     res.status(200).send();
+    // });
+    Local.findByIdAndUpdate(id, {
+        isActive:false,
+        deletedBy: req.user._id,
+        deletedOn: Date.now()
     }).exec().then(function(location) {
         res.status(200).send();
     });
@@ -1676,7 +2441,9 @@ exports.addLocation = function(req, res) {
     // console.log(req,'add location with details');
     addLocation = new Local({
         name: name,
-        details: details
+        details: details,
+        addedBy: req.user._id,
+        addedOn: Date.now()
     });
     Local.create(addLocation).then(function(addLocation) {
         res.status(200).send(addLocation);
@@ -1692,7 +2459,9 @@ exports.updateLocation = function(req, res) {
     console.log(req,'request');
     var update = {
        name: name,
-       details: details
+       details: details,
+       updatedBy: req.user._id,
+       updatedOn: Date.now()
     }
     Local.findOneAndUpdate(query, update).exec().then(function(location) {
         res.status(200).send(location);

@@ -1,0 +1,177 @@
+section.content-header
+  h1 Staff Role configuration
+  ol.breadcrumb
+    li
+      a(href='/')
+        i.fa.fa-dashboard
+        |  Home
+    li.active Config Staff Role
+
+section.content
+  table.table.table-striped.table-bordered.table-hover
+    thead
+      tr
+        th Username
+        th Feeds
+        th Articles
+        th Categories
+        th Tags
+        th Locations
+        th Staffs
+        th Action
+    tbody
+      tr(ng-repeat='staff in staffs track by $index | filter:searchText')
+        td {{staff.username}}
+        td
+          label
+            input(type='checkbox', ng-model='staff.addFeeds')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateFeeds')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delFeeds')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staff.addArticles')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateArticles')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delArticles')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staff.addCategories')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateCategories')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delCategories')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staff.addTags')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateTags')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delTags')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staff.addLocations')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateLocations')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delLocations')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staff.addStaffs')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.updateStaffs')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staff.delStaffs')
+            |   Delete
+        td
+          a.color-edit(href='', ng-click="updateRole($index, staff)", title='Save')
+            i.glyphicon.glyphicon-floppy-disk
+    //- tbody
+      tr(ng-repeat='staff in staffs track by $index | filter:searchText')
+        td {{staff.username}}
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addFeeds', ng-change='setRights($index, staffroles[$index].addFeeds, "addFeeds")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateFeeds', ng-change='setRights($index, staffroles[$index].updateFeeds, "updateFeeds")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delFeeds', ng-change='setRights($index, staffroles[$index].delFeeds, "delFeeds")')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addArticles', ng-change='setRights($index, staffroles[$index].addArticles, "addArticles")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateArticles', ng-change='setRights($index, staffroles[$index].updateArticles, "updateArticles")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delArticles', ng-change='setRights($index, staffroles[$index].delArticles, "delArticles")')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addCategories', ng-change='setRights($index, staffroles[$index].addCategories, "addCategories")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateCategories', ng-change='setRights($index, staffroles[$index].updateCategories, "updateCategories")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delCategories', ng-change='setRights($index, staffroles[$index].delCategories, "delCategories")')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addTags', ng-change='setRights($index, staffroles[$index].addTags, "addTags")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateTags', ng-change='setRights($index, staffroles[$index].updateTags, "updateTags")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delTags', ng-change='setRights($index, staffroles[$index].delTags, "delTags")')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addLocations', ng-change='setRights($index, staffroles[$index].addLocations, "addLocations")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateLocations', ng-change='setRights($index, staffroles[$index].updateLocations, "updateLocations")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delLocations', ng-change='setRights($index, staffroles[$index].delLocations, "delLocations")')
+            |   Delete
+        td
+          label
+            input(type='checkbox', ng-model='staffroles[$index].addStaffs', ng-change='setRights($index, staffroles[$index].addStaffs, "addStaffs")')
+            |   Add
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].updateStaffs', ng-change='setRights($index, staffroles[$index].updateStaffs, "updateStaffs")')
+            |   Update
+          &nbsp;&nbsp;
+          label
+            input(type='checkbox', ng-model='staffroles[$index].delStaffs', ng-change='setRights($index, staffroles[$index].delStaffs, "delStaffs")')
+            |   Delete
+        td
+          a.color-edit(href='', ng-click="updateRole(staff._id, $index)", title='Save')
+            i.glyphicon.glyphicon-floppy-disk

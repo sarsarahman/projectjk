@@ -1,0 +1,70 @@
+section.content-header
+  h1 Tags configuration
+  ol.breadcrumb
+    li
+      a(href='/')
+        i.fa.fa-dashboard
+        |  Home
+    li.active Config Tag
+
+section.content
+  #form-feed.hidden-xs
+    form.form-inline.pull-right(role='form', name='addTagForm')
+      .form-group
+        label.sr-only(for='addTag') Tag
+        input.input-sm.form-control#addTag(type="text", name="addTag", placeholder='Enter Tag', size='60', ng-model="addTag.name", required) 
+      button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+        i.glyphicon.glyphicon-plus
+        |  Add
+    .clear
+  table.table.table-striped.table-bordered.table-hover
+    thead
+      tr
+        th #
+        th Image
+        th Name
+        th Boost Value
+        th Actions
+    tbody
+      tr(ng-repeat='tag in tags track by $index | filter:searchText')
+        td {{tag._id}}
+        td
+          img(src='{{tag.imgUrl}}', style='width:100px;height:100px')
+        td {{tag.name}}
+        td {{tag.boostValue}}
+        td
+          a.color-edit(href='', ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modTag",title='Edit')
+            i.glyphicon.glyphicon-pencil
+          &nbsp;&nbsp;
+          a.color-delete(href='',ng-click='delete($index)',title='Delete')
+            i.glyphicon.glyphicon-trash
+
+
+.modal.fade#modTag(tabindex="-1", role="dialog", aria-labelledby="Edit Tag", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modTagLbl.modal-title Edit Tag
+      .modal-body
+        form(role='form', name='editTagForm')
+          input(type='hidden')
+          .form-group
+            label(for='editboostvalue') Boost Value
+            input.form-control#editTag(type="text", name="editboostvalue", placeholder='Enter Boostvalue', size='60', ng-model="editTag.boostValue", required) 
+          | &nbsp;
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editTag.name")
+          | &nbsp;
+          .form-group
+            label(for='editimgUrl', size='30') Image Url
+            input.form-control#editimgUrl(type="text", name="editimgUrl", placeholder='Paste Image Url here', ng-model="editTag.imgUrl") 
+            &nbsp;
+            img(src='{{getImage()}}', style='width:100px;height:100px;margin-right:30px')
+            .button(ngf-select='', ngf-change='upload($files,$event,$testing)', ngf-multiple='false', class='btn btn-primary')
+              i.glyphicon.glyphicon-upload
+              div Select Image 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save

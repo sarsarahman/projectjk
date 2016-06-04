@@ -264,6 +264,7 @@ app.get('/api/users/:page', api.fetchUsers);
 app.get('/api/refresh', api.refreshFeeds);
 
 app.get('/api/fetchstaffs/:page', api.fetchStaffs);
+app.get('/api/getstaffs', api.getStaffs);
 app.post('/api/staffs', api.addStaff);
 app.get('/api/staffs/:id', api.getStaff);
 app.put('/api/staffs/:id', api.updateStaff);
@@ -271,12 +272,22 @@ app.delete('/api/staffs/:id', api.delStaff);
 app.put('/api/banstaffs/:id', api.banStaff);
 app.put('/api/unbanstaffs/:id', api.unbanStaff);
 
+// app.get('/api/getstaffrole', api.getstaffRole);
+// app.put('/api/staffrole/:staffid', api.updatestaffRole);
+
+app.get('/api/counts', api.getCounts);
 app.get('/api/articles/pending/:page', api.getPendingArticles);
 app.get('/api/articles/approved/:page', api.getApprovedArticles);
 app.get('/api/articles/starred/:page', api.getStarredArticles);
+app.get('/api/articles/deleted/:page', api.getDeletedArticles);
 app.post('/api/articles', api.addArticle);
 app.post('/api/articles/:id', api.updateArticle);
+app.post('/api/bulkupdatearticles', api.bulkupdateArticle);
+app.post('/api/approveselectedarticles', api.approveArticles);
+app.post('/api/disapproveselectedarticles', api.disapproveArticles);
+app.put('/api/stararticle/:id', api.starArticle);
 app.delete('/api/articles/:id', api.delArticle);
+app.delete('/api/deleteselectedarticles', api.delselectedArticles);
 app.get('/api/articles/:id', api.getArticle);
 
 app.get('/api/feeds', api.getFeeds);

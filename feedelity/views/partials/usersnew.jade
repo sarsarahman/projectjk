@@ -1,0 +1,63 @@
+section.content-header
+  h1 Users configuration
+  ol.breadcrumb
+    li
+      a(href='/')
+        i.fa.fa-dashboard
+        |  Home
+    li.active Config User
+
+section.content
+  table.table.table-striped.table-bordered.table-hover
+    thead
+      tr
+        th User ID
+        th Display Picture
+        th Name
+        th Email
+        th Mobile No
+        th Location
+        th User Likes
+        th Likes
+        th Dislikes
+        th Actions
+    tbody
+      tr(ng-repeat='user in users track by $index | filter:searchText')
+        td {{user._id}}
+        td
+        td {{user.firstName}} {{user.lastName}}
+        td {{user.email}}
+        td
+        td
+        td
+        td
+        td
+        td
+          a.color-view(ng-href='#/view')
+            i.fa.fa-eye.fa-lg
+          a.color-edit(ng-href='#/edit/{{user._id}}')
+            i.fa.fa-pencil.fa-lg
+          a.color-delete(ng-click='Delete(user._id)')
+            i.fa.fa-trash-o.fa-lg
+
+.modal.fade#modFeed(tabindex="-1", role="dialog", aria-labelledby="Edit feed", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modFeedLbl.modal-title Edit feed
+      .modal-body
+        form(role='form', name='editFeedForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUrl') URL
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          | &nbsp;
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+
+  .clear
