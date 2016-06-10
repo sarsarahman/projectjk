@@ -39,6 +39,7 @@ exports.hasRights = function(req, res) {
 
 // Mongoose functions
 
+// mongoose.connect('mongodb://localhost/feedelity');
 mongoose.connect('mongodb://localhost/feedelityNew');
 
 var db = mongoose.connection;
@@ -774,41 +775,41 @@ exports.updatestaffRole = function(req, res) {
 
 // ^Staffs
 exports.staffLogin = function(userData, callback) {
-    addStaff = new Staff({
-        name: 'Abdur Rahman',
-        username: 'admin',
-        password: 'password',
-        email: 'sarsarahman@gmail.com',
-        gender: 'Male',
-        mobileNumber: '9840903819',
-        location: 'Chennai',
-        dp: 'String',
-        status: true,
-        adminLevel: 1,
-        addFeeds: true,
-        updateFeeds: true,
-        delFeeds: true,
-        addArticles: true,
-        updateArticles: true,
-        delArticles: true,
-        addCategories: true,
-        updateCategories: true,
-        delCategories: true,
-        addLocations: true,
-        updateLocations: true,
-        delLocations: true,
-        addTags: true,
-        updateTags: true,
-        delTags: true,
-        addStaffs: true,
-        updateStaffs: true,
-        delStaffs: true
-    });
+    // addStaff = new Staff({
+    //     name: 'Abdur Rahman',
+    //     username: 'admin',
+    //     password: 'password',
+    //     email: 'sarsarahman@gmail.com',
+    //     gender: 'Male',
+    //     mobileNumber: '9840903819',
+    //     location: 'Chennai',
+    //     dp: 'String',
+    //     status: true,
+    //     adminLevel: 1,
+    //     addFeeds: true,
+    //     updateFeeds: true,
+    //     delFeeds: true,
+    //     addArticles: true,
+    //     updateArticles: true,
+    //     delArticles: true,
+    //     addCategories: true,
+    //     updateCategories: true,
+    //     delCategories: true,
+    //     addLocations: true,
+    //     updateLocations: true,
+    //     delLocations: true,
+    //     addTags: true,
+    //     updateTags: true,
+    //     delTags: true,
+    //     addStaffs: true,
+    //     updateStaffs: true,
+    //     delStaffs: true
+    // });
 
-    Staff.create(addStaff).then(function(addStaff) {
-        // res.status(200).send(adduser);
-          callback(addStaff);
-    });
+    // Staff.create(addStaff).then(function(addStaff) {
+    //     // res.status(200).send(adduser);
+    //       callback(addStaff);
+    // });
 
     Staff.findOne({
         username: userData.username,
