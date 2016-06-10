@@ -13,6 +13,12 @@ var request = require('request'),
     https = require('https'),
     expressSession = require('express-session');
 
+// ^GCM
+var gcm = require('node-gcm');
+var Server_API_Key = "AIzaSyDtOWiCI3flYLzGR37N9f0zzx65ahsldF0",
+    Sender_ID = "662660625990";
+// $GCM
+
 var deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 var shortMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -33,7 +39,7 @@ exports.hasRights = function(req, res) {
 
 // Mongoose functions
 
-mongoose.connect('mongodb://localhost/feedelity');
+mongoose.connect('mongodb://localhost/feedelityNew');
 
 var db = mongoose.connection;
 
@@ -499,6 +505,116 @@ var staffRoleSchema = mongoose.Schema({
     }
 });
 
+var trendingSchema = mongoose.Schema({
+    location: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location'
+    },
+    geo: {
+        type: [Number],
+        index: "2d"
+    },
+    tag: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tag'
+    },
+    boostValue: Number,
+    startTime: {
+        type: Date,
+        default: Date.now
+    },
+    endTime: {
+        type: Date,
+        default: Date.now
+    },
+    isScheduled: {
+        type: Boolean,
+        default: false
+    },
+    isEnabled: {
+        type: Boolean,
+        default: true
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    updatedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
+});
+
+var userLocationSchema = mongoose.Schema({
+    userId : {
+        type: mongoose.Schema.Types.ObjectId,
+        // ref: 'User'
+        ref: 'Staff'
+    },
+    locationId : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location'
+    },
+    locatedOn: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+var deviceSchema = mongoose.Schema({
+    deviceName: String,
+    deviceId: String, 
+    registrationId: String,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
+});
+
+var messageSchema = mongoose.Schema({
+    title: String,
+    message: String, 
+    customMessage: String,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    addedOn: Date,
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Staff'
+    },
+    deletedOn: Date
+});
+
 
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
@@ -512,6 +628,10 @@ Like = mongoose.model('Like', likeSchema);
 Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 PreferredTag = mongoose.model('PreferredTag', preferredTagSchema);
 StaffRole = mongoose.model('staffrole', staffRoleSchema);
+Trending = mongoose.model('trending', trendingSchema);
+UserLocation = mongoose.model('userlocation', userLocationSchema);
+Device = mongoose.model('device', deviceSchema);
+Message = mongoose.model('message', messageSchema);
 
 exports.userLogin = function(userData, callback) {
 
@@ -569,18 +689,49 @@ exports.updateUserLocation = function(req, res) {
 }
 
 
-
-
 exports.fetchUsers = function(req, res) {
 
     var paginate = 20;
     var page = req.params.page;
     User.find().sort({
         date: -1
-    }).skip(page * paginate).limit(paginate).exec().then(function(users) {
+    }).skip(page * paginate).limit(paginate).populate('location').exec().then(function(users) {
         res.json(users);
     });
 
+}
+
+
+exports.fetchLikes = function(req, res) {
+    Like.find().exec().then(function(likes) {
+        res.json(likes);
+    });
+}
+
+exports.getUserLocations = function(req, res) {
+    UserLocation.find().populate('userId locationId').exec().then(function(userlocations) {
+        res.json(userlocations);
+    });
+}
+
+exports.filterLocations = function(req, res) {
+    var nday = parseInt(req.body.selectedDate.split('T')[0].split('-')[2]);
+    var nmonth = parseInt(req.body.selectedDate.split('T')[0].split('-')[1]);
+    var nyear = parseInt(req.body.selectedDate.split('T')[0].split('-')[0]);
+    console.log('selectedDate:', moment.utc(req.body.selectedDate).startOf('day').toDate());
+    var finalDay = moment([nyear, nmonth - 1, nday]).add(1, 'd').format("YYYY-MM-DD");
+    console.log('finalDay:', moment.utc(finalDay).startOf('day').toDate());
+    UserLocation.find({
+        $and:[{
+            locatedOn:{$gte: moment.utc(finalDay).startOf('day').toDate()}
+        },{
+            locatedOn:{$lte: moment.utc(finalDay).endOf('day').toDate()}
+        }, {
+            userId: req.body.staffId
+        }]
+    }).populate('userId locationId').exec().then(function(userlocations) {
+        res.json(userlocations);
+    });
 }
 
 // ^StaffRole
@@ -623,41 +774,41 @@ exports.updatestaffRole = function(req, res) {
 
 // ^Staffs
 exports.staffLogin = function(userData, callback) {
-    // addStaff = new Staff({
-    //     name: 'Abdur Rahman',
-    //     username: 'admin',
-    //     password: 'password',
-    //     email: 'sarsarahman@gmail.com',
-    //     gender: 'Male',
-    //     mobileNumber: '9840903819',
-    //     location: 'Chennai',
-    //     dp: 'String',
-    //     status: true,
-    //     adminLevel: 1,
-    //     addFeeds: true,
-    //     updateFeeds: true,
-    //     delFeeds: true,
-    //     addArticles: true,
-    //     updateArticles: true,
-    //     delArticles: true,
-    //     addCategories: true,
-    //     updateCategories: true,
-    //     delCategories: true,
-    //     addLocations: true,
-    //     updateLocations: true,
-    //     delLocations: true,
-    //     addTags: true,
-    //     updateTags: true,
-    //     delTags: true,
-    //     addStaffs: true,
-    //     updateStaffs: true,
-    //     delStaffs: true
-    // });
+    addStaff = new Staff({
+        name: 'Abdur Rahman',
+        username: 'admin',
+        password: 'password',
+        email: 'sarsarahman@gmail.com',
+        gender: 'Male',
+        mobileNumber: '9840903819',
+        location: 'Chennai',
+        dp: 'String',
+        status: true,
+        adminLevel: 1,
+        addFeeds: true,
+        updateFeeds: true,
+        delFeeds: true,
+        addArticles: true,
+        updateArticles: true,
+        delArticles: true,
+        addCategories: true,
+        updateCategories: true,
+        delCategories: true,
+        addLocations: true,
+        updateLocations: true,
+        delLocations: true,
+        addTags: true,
+        updateTags: true,
+        delTags: true,
+        addStaffs: true,
+        updateStaffs: true,
+        delStaffs: true
+    });
 
-    // Staff.create(addStaff).then(function(addStaff) {
-    //     // res.status(200).send(adduser);
-    //       callback(addStaff);
-    // });
+    Staff.create(addStaff).then(function(addStaff) {
+        // res.status(200).send(adduser);
+          callback(addStaff);
+    });
 
     Staff.findOne({
         username: userData.username,
@@ -1069,9 +1220,6 @@ exports.bookmarkArticle = function(req, res) {
 }
 
 
-
-
-
 exports.bookmarkedArticles = function(req, res) {
     var current_username = req.user.userData._id;
     Article.find({
@@ -1103,7 +1251,6 @@ exports.bookmarkedArticlesMaxLimit = function(req, res) {
         }
     });
 }
-
 
 
 // Feeds functions
@@ -1847,6 +1994,39 @@ exports.approveArticles = function(req, res) {
     });
 }
 
+exports.getArticlesDashboard = function(req, res) {
+    Article.find({
+        approved: false,
+        isActive: true
+    }).limit(10).exec().then(function(articles) {
+        articles.sort(compareArticles);
+        res.json(articles);
+    });
+}
+
+exports.getRecentArticlesDashboard = function(req, res) {
+    Article.find({
+        isActive: true
+    }).sort({
+        date: -1
+    }).limit(5).exec(function(err, articles) {
+        if(err) console.log('getRecentArticlesDashboard err:', err);
+        else res.json(articles);
+    });
+}
+
+exports.approveArticleDashboard = function(req, res) {
+    console.log('req.params.id:', req.params.id);
+    Article.findByIdAndUpdate(req.params.id, {
+        approved: true,
+        approvedBy: req.user._id,
+        approvedOn: new Date()
+    }).exec(function(err, article) {
+        if(err) console.log('approveArticle err:', err);
+        else res.status(200).send(article);
+    });
+}
+
 exports.disapproveArticles = function(req, res) {
     var disapprovedArticles = [];
     async.eachSeries(req.body, function(articleId, cb) {
@@ -2008,8 +2188,6 @@ function extractArticle(item, feed) {
 }
 
 
-
-
 exports.getSearchArticles = function(req, res) {
 
     var searchdata = req.params.searchdata;
@@ -2069,7 +2247,6 @@ exports.getSearchArticlesMaxLimit = function(req, res) {
 }
 
 
-
 exports.getCategoryArticles = function(req, res) {
 
     var paginate = 20;
@@ -2100,8 +2277,6 @@ exports.getCategoryArticles = function(req, res) {
         }
     });
 }
-
-
 
 
 exports.getCategoryArticlesMaxLimit = function(req, res) {
@@ -2137,7 +2312,6 @@ exports.getCategoryArticlesMaxLimit = function(req, res) {
         }
     });
 }
-
 
 
 exports.getRecentArticles = function(req, res) {
@@ -2178,7 +2352,6 @@ exports.getRecentArticlesMaxLimit = function(req, res) {
         };
     });
 }
-
 
 
 exports.getTrendArticles = function(req, res) {
@@ -2223,7 +2396,6 @@ exports.getTrendArticles = function(req, res) {
         };
     });
 }
-
 
 
 exports.getTrendArticlesMaxLimit = function(req, res) {
@@ -2468,6 +2640,152 @@ exports.updateLocation = function(req, res) {
     });
 }
 
+
+// ^Trending
+exports.getTrendings = function(req, res) {
+    Trending.find().populate('location tag').exec(function(err, trendings) {
+        if(err) console.log('getTrendings err:', err);
+        else res.status(200).send(trendings);
+    });
+}
+
+exports.getTrending = function(req, res) {
+    Trending.findById(req.params.id).populate('location tag').exec(function(err, trending) {
+        if(err) console.log('getTrending err:', err);
+        else res.status(200).send(trending);
+    });
+}
+
+exports.addTrending = function(req, res) {
+    if(req.body.isScheduled) {
+        var startTime24hr = moment(req.body.startTime, ["h:mm A"]).format("HH:mm");
+        var endTime24hr = moment(req.body.endTime, ["h:mm A"]).format("HH:mm");
+        var startDateTime = new Date().setHours(startTime24hr.split(':')[0], startTime24hr.split(':')[1]);
+        var endDateTime = new Date().setHours(endTime24hr.split(':')[0], endTime24hr.split(':')[1]);
+    }
+    new Trending({
+        location: req.body.location._id,
+        geo: [req.body.location.details.geometry.location.lat,
+            req.body.location.details.geometry.location.lng],
+        tag: req.body.tag._id,
+        boostValue: req.body.boostValue,
+        startTime: startDateTime || Date.now(),
+        endTime: endDateTime || Date.now(),
+        isScheduled: req.body.isScheduled || false,
+        addedBy: req.user._id,
+        addedOn: Date.now()
+    }).save(function(err, data) {
+        if(err) console.log('add trending err:', err);
+        else {
+            Trending.findById(data._id).populate('location tag').exec(function(err, data) {
+                if(err) console.log('add find trending err:', err);
+                else res.status(200).send(data);
+            });
+        }
+    });
+}
+
+exports.updateTrending = function(req, res) {
+    // console.log('doc.DateTime:', doc.DateTime.toJSON().slice(0, 10));
+    if(req.body.isScheduled) {
+        var startTime24hr = moment(req.body.startTime, ["h:mm A"]).format("HH:mm");
+        var endTime24hr = moment(req.body.endTime, ["h:mm A"]).format("HH:mm");
+        var startDateTime = new Date().setHours(startTime24hr.split(':')[0], startTime24hr.split(':')[1]);
+        var endDateTime = new Date().setHours(endTime24hr.split(':')[0], endTime24hr.split(':')[1]);
+    }
+    Trending.findByIdAndUpdate(req.params.id, {
+        location: req.body.location._id,
+        geo: [req.body.location.details.geometry.location.lat,
+                req.body.location.details.geometry.location.lng],
+        tag: req.body.tag._id,
+        boostValue: req.body.boostValue,
+        startTime: startDateTime || Date.now(),
+        endTime: endDateTime || Date.now(),
+        isScheduled: req.body.isScheduled || false,
+        updatedBy: req.user._id,
+        updatedOn: Date.now()
+    }).populate('location tag').exec(function(err, trending) {
+        if(err) console.log('updateTrending err:', err);
+        else res.status(200).send(trending);
+    });
+}
+
+exports.delTrending = function(req, res) {
+    Trending.findByIdAndUpdate(req.params.id, {
+        $set: {isActive:false}
+    }).exec(function(err, trending) {
+        if(err) console.log('enableTrending err:', err);
+        else res.status(200).send(trending);
+    });
+}
+
+exports.enableTrending = function(req, res) {
+    Trending.findByIdAndUpdate(req.params.id, {
+        $set: {isEnabled:req.body.bool}
+    }).exec(function(err, trending) {
+        if(err) console.log('enableTrending err:', err);
+        else res.status(200).send(trending);
+    });
+}
+
+exports.getTrendingTags = function(req, res) {
+    var maxDistance = 200;
+    maxDistance /= 6371;
+    var coords = [];
+    coords[0] = req.params.latlng.split(',')[0] || 0;
+    coords[1] = req.params.latlng.split(',')[1] || 0;
+
+    Trending.find({
+        // location: req.body.location._id,
+        geo: {
+            $near: coords,
+            $maxDistance: maxDistance
+        },
+        isEnabled: true,
+        isActive: true
+    },{tag:1}).sort({boostValue:1}).limit(10).populate('tag').exec(function(err, tags) {
+        if(err) console.log('getTrendingTags err:', err);
+        else res.json(tags);
+    })
+}
+
+exports.getTrendingArticles = function(req, res) {
+    // Article.find({
+    //     // tags: tags[0].tag._id,
+    //     tags: req.params.tagId,
+    //     isActive: true
+    // }).exec(function(err, articles) {
+    //     if(err) console.log('getTrendingArticles err:', err);
+    //     else res.json(articles);
+    // });
+    
+    var trendingArticles = [];
+    async.eachSeries(req.body.tags, function(tag, cb) {
+        Article.find({
+            tags: tag.tag._id,
+            isActive: true
+        }).exec(function(err, article) {
+            if(err) console.log('getTrendingArticle err:', err);
+            else trendingArticles.push(article);
+            cb();
+        });
+    }, function(err) {
+        if(err) console.log('async gettrendingArticles err:', err);
+        else res.status(200).send(trendingArticles);
+        new UserLocation({
+            userId: req.user._id,
+            locationId: req.body.userlocationId
+        }).save();
+    });
+}
+// $Trending
+
+// ^UserLocation
+exports.addUserLocation = function(req, res) {
+    console.log('addUserLocation:', req.body);
+}
+// $UserLocation
+
 // Utility functions
 
 function monthsDiff(d1, d2) {
@@ -2570,3 +2888,68 @@ exports.multipleImagesUpload = function(req, res) {
         });
     }
 }
+
+// ^GCM
+exports.getDevices = function(req, res) {
+    Device.find().exec(function(err, devices) {
+        if(err) console.log('getDevices err:', err);
+        else res.status(200).send(devices);
+    });
+}
+
+exports.addDevice = function(req, res) {
+    new Device({
+        deviceId: req.body.deviceId,
+        deviceName: req.body.deviceName,
+        registrationId: req.body.registrationId,
+        addedBy: req.user._id,
+        addedOn: new Date()
+    }).save(function(err, device) {
+        if(err) console.log('addDevice err:', err);
+        else res.status(200).send(device);
+    });
+}
+
+exports.delDevice = function(req, res) {
+    Device.findByIdAndUpdate(req.params.registrationId, {
+        $set:{ 
+            isActive: false,
+            deletedOn: new Date(),
+            deletedBy: req.user._id
+        }
+    }).exec(function(err, device) {
+        if(err) console.log('delDevice err:', err);
+        else res.status(200).send(device);
+    });
+}
+
+exports.sendMessage = function(req, res) {
+    var message = new gcm.Message({
+        data: {
+            title: req.body.title,
+            message: req.body.message,
+            custommessage: req.body.customMessage
+        }
+    });
+    var regTokens = [req.body.registrationId];
+    var sender = new gcm.Sender(Server_API_Key);
+    console.log('message:', message);
+    sender.send(message, { registrationTokens: regTokens }, function (err, msg) {
+        if(err) {
+            console.error('msg send err:', err);
+        } else {
+            console.log('msg sent:', msg);
+            new Message({
+                title: req.body.title,
+                message: req.body.message,
+                customMessage: req.body.customMessage,
+                addedBy: req.user._id,
+                addedOn: new Date()
+            }).save(function(err, message) {
+                if(err) console.log('new message err:', err);
+                else res.status(200).send(message);
+            });
+        }
+    });
+}
+// $GCM

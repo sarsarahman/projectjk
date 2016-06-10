@@ -260,8 +260,13 @@ app.get('/api/liked', api.likedArticles);
 app.get('/api/disliked', api.dislikedArticles);
 
 // JSON API
-app.get('/api/users/:page', api.fetchUsers);
 app.get('/api/refresh', api.refreshFeeds);
+
+app.get('/api/users/:page', api.fetchUsers);
+app.get('/api/getlikes', api.fetchLikes);
+
+app.get('/api/getuserlocations', api.getUserLocations);
+app.post('/api/filterlocations', api.filterLocations);
 
 app.get('/api/fetchstaffs/:page', api.fetchStaffs);
 app.get('/api/getstaffs', api.getStaffs);
@@ -290,6 +295,20 @@ app.delete('/api/articles/:id', api.delArticle);
 app.delete('/api/deleteselectedarticles', api.delselectedArticles);
 app.get('/api/articles/:id', api.getArticle);
 
+app.get('/api/dashboardarticles', api.getArticlesDashboard);
+app.get('/api/recentdashboardarticles', api.getRecentArticlesDashboard);
+app.post('/api/approvearticle/:id', api.approveArticleDashboard); // Dashboard
+
+app.get('/api/trendings/:latlng', api.getTrendingTags);
+app.post('/api/trendingarticles', api.getTrendingArticles);
+
+app.get('/api/fetchtrendings', api.getTrendings);
+app.get('/api/fetchtrending/:id', api.getTrending);
+app.put('/api/trending', api.addTrending);
+app.post('/api/trending/:id', api.updateTrending);
+app.delete('/api/trending/:id', api.delTrending);
+app.post('/api/enabletrending/:id', api.enableTrending);
+
 app.get('/api/feeds', api.getFeeds);
 app.post('/api/feeds', api.addFeed);
 app.post('/api/feeds/:id', api.updateFeed);
@@ -314,6 +333,13 @@ app.post('/api/locations', api.addLocation);
 app.post('/api/locations/:id', api.updateLocation);
 app.delete('/api/locations/:id', api.delLocation);
 app.get('/api/locations/:id', api.getLocation);
+
+// ^GCM
+app.get('/api/devices', api.getDevices);
+app.post('/api/devices', api.addDevice);
+app.delete('/api/devices/:registrationId', api.delDevice);
+app.post('/api/sendmessage', api.sendMessage);
+// $GCM
 
 
 app.post('/api/images', api.singleImageUpload);

@@ -9,6 +9,113 @@ var getPath = function(href) {
     return nasr;
 };
 
+function userLocationMap(locations, $filter) {
+    //^initiate map
+    var map;
+    var infowindow;
+    var ifelsetech = {lat:13.0865868, lng:80.2649927};
+
+    function initialize(lat, lng) {
+
+        var styles = [{
+            stylers: [{
+                    hue: "#00b2ff"
+                }, {
+                    saturation: -50
+                }, {
+                    lightness: 7
+                }, {
+                    weight: 1
+                }
+
+            ]
+        }, {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{
+                lightness: 100
+            }, {
+                visibility: "on"
+            }]
+        }, {
+            featureType: "road",
+            elementType: "labels",
+            stylers: [{
+                visibility: "on"
+            }]
+        }];
+
+        var styledMap = new google.maps.StyledMapType(styles, {
+            name: "Styled Map"
+        });
+
+        var pos = new google.maps.LatLng(lat, lng);
+        var center = new google.maps.LatLng(13.0865868, 80.2649927);
+
+        map = new google.maps.Map(document.getElementById('userLocationMap'), {
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            center: center,
+            zoom: 5,
+            streetViewControl: false,
+            panControl: false,
+            zoomControlOptions: {
+                style: google.maps.ZoomControlStyle.DEFAULT
+            },
+            mapTypeControlOptions: {
+                mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+            }
+        });
+
+        // var marker = new google.maps.Marker({
+        //     map: map,
+        //     position: pos
+        // });
+
+        callback();
+        map.mapTypes.set('map_style', styledMap);
+        map.setMapTypeId('map_style');
+    }
+
+    function callback() {
+        for (var i in locations) {
+            createMarker(locations[i]);
+        }
+    }
+
+    function createMarker(place) {
+        var marker = new google.maps.Marker({
+            map: map,
+            position: place.details.geometry.location,
+            // icon: 'https://www.google.com/mapfiles/marker_green.png'
+        });
+
+        infowindow = new google.maps.InfoWindow();
+
+        google.maps.event.addListener(marker, 'click', function() {
+            // infowindow.setContent(place.name + ',</br>' + $filter('date')(place.addedOn, 'shortTime'));
+            infowindow.setContent(place.name);
+            infowindow.open(map, marker);
+        });
+
+        google.maps.event.addListener(marker, 'mouseover', function () {
+            // infowindow.setContent(contentString);
+            // infowindow.open(map, this);
+            // marker.setIcon('https://www.google.com/mapfiles/marker_green.png')
+        });                
+
+        google.maps.event.addListener(marker, 'mouseout', function () {
+            // infowindow.close();
+            // marker.setIcon('');
+        });
+    }
+
+    initialize(ifelsetech.lat, ifelsetech.lng);
+    google.maps.event.addListenerOnce(map, 'idle', function() {
+      google.maps.event.trigger(map, 'resize');
+      map.setCenter({lat: 13.0865868, lng: 80.2649927}) });
+    //initiate map$
+}
+
 /* Controllers */
 
 function FeedelityCtrl($scope, $http, Upload) {
@@ -23,6 +130,8 @@ function FeedelityCtrl($scope, $http, Upload) {
     $scope.trimmedCategorys = [];
 
     $scope.articles = [];
+    $scope.page = 0;
+    $scope.sendMessage = {};
 
     $scope.logout = function() {
         window.location.href = "/logout";
@@ -50,6 +159,35 @@ function FeedelityCtrl($scope, $http, Upload) {
     error(function(data, status, headers, config) {
         console.log('articles count err:', data);
         $scope.articlesCount = []
+    });
+
+    function getAllArticles() {
+        var articlesUrl = '/api/dashboardarticles';
+        $http({
+            method: 'GET',
+            url: articlesUrl
+        }).
+        success(function(data, status, headers, config) {
+            console.log('get all articles:', data.length);
+            $scope.articlesDashboard = data;
+        }).
+        error(function(data, status, headers, config) {
+            $scope.articlesDashboard = []
+        });
+    }
+
+    getAllArticles();
+
+    $http({
+        method: 'GET',
+        url: '/api/recentdashboardarticles'
+    }).
+    success(function(data, status, headers, config) {
+        console.log('get all articles:', data.length);
+        $scope.recentarticlesDashboard = data;
+    }).
+    error(function(data, status, headers, config) {
+        $scope.recentarticlesDashboard = []
     });
 
 
@@ -100,7 +238,8 @@ function FeedelityCtrl($scope, $http, Upload) {
         $scope.trimmedLocations = $scope.locations.map(function(obj) {
             return {
                 _id: obj._id,
-                name: obj.name
+                name: obj.name,
+                details: obj.details // added this to get latlng for $near search in trending.
             };
         });
     }).
@@ -167,6 +306,44 @@ function FeedelityCtrl($scope, $http, Upload) {
         $scope.articlesCount.starredArticlesCount -= 1;
     });
 
+    $scope.sendMsg = function() {
+        console.log('$scope.sendMessage:', $scope.sendMessage);
+        $http.post('/api/sendmessage', $scope.sendMessage).
+        success(function(data, status, headers, config) {
+            console.log('sendMsg data:', data);
+            var msgsendMsg = BootstrapDialog.show({
+                type: buttonTypes[3],
+                message: "Message sent successfully."
+            });
+            setTimeout(function() {
+                msgsendMsg.close();
+            }, 2000);
+        }).
+        error(function(data, status, headers, config) {
+            console.log('sendMsg err:', data);
+        });
+    }
+
+    $scope.approveArticle = function(index) {
+        $http.post('/api/approvearticle/' + $scope.articlesDashboard[index]._id).
+        success(function(data, status, headers, config) {
+            console.log('approveArticle:', data);
+            var msgarticleApproved = BootstrapDialog.show({
+                type: buttonTypes[3],
+                message: "Articles approved successfully."
+            });
+            setTimeout(function() {
+                msgarticleApproved.close();
+            }, 2000);
+            $scope.articlesDashboard.splice(index, 1);
+            $scope.articlesCount.pendingArticlesCount -= 1;
+            $scope.articlesCount.approvedArticlesCount += 1;
+        }).
+        error(function(data, status, headers, config) {
+            console.log('approveArticle err:', data);
+        });
+    }
+
 }
 
 function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
@@ -230,21 +407,6 @@ function ArticlesCtrl($scope, $http, $route, Upload, $timeout) {
 
         };
     }
-
-    // $scope.$on('feedsRefreshed', function() {
-    //     var articlesUrl = '/api/articles/' + $scope.type;
-    //     $http({
-    //         method: 'GET',
-    //         url: articlesUrl
-    //     }).
-    //     success(function(data, status, headers, config) {
-    //         console.log('feedsRefreshed');
-    //         $scope.articles = data;
-    //     }).
-    //     error(function(data, status, headers, config) {
-    //         $scope.articles = []
-    //     });
-    // });
 
     $scope.$on('feedsRefreshed', function() {
         var articlesUrl = '/api/articles/' + $scope.type;
@@ -1303,6 +1465,401 @@ function TagsCtrl($scope, $http, Upload) {
 }
 
 
+function TrendsCtrl($scope, $http, Upload, $filter) {
+    $http({
+        method: 'GET',
+        url: '/api/fetchtrendings'
+    }).
+    success(function(data, status, headers, config) {
+        console.log('trendings data:', data);
+        $scope.trendings = data;
+    }).
+    error(function(data, status, headers, config) {
+        console.log('trending err:', data);
+        $scope.trendings = [];
+    });
+
+
+    // $http({
+    //     method: 'GET',
+    //     url: '/api/trendingarticles'
+    // }).
+    // success(function(data, status, headers, config) {
+    //     console.log('trendingarticles data:', data);
+    //     $scope.trendingArticles = data;
+    // }).
+    // error(function(data, status, headers, config) {
+    //     console.log('trendingarticles err:', data);
+    //     $scope.trendingArticles = [];
+    // });
+
+    // // first row checkboxes
+    // $('tr td:first-child input[type="checkbox"]').click( function() {
+    //    //enable/disable all except checkboxes, based on the row is checked or not
+    //    $(this).closest('tr').find(":input:not(:first)").attr('disabled', !this.checked);
+    // });
+
+    $scope.addTrend = {};
+    $scope.add = function() {
+        if(loggedinUser.addArticles) {
+            if($scope.addTrend.isScheduled) {
+                if($scope.addTrend.location && $scope.addTrend.tag && $scope.addTrend.boostValue
+                    && $scope.addTrend.startTime && $scope.addTrend.endTime) {
+                    if(Date.parse('2016/06/06 ' + $scope.addTrend.endTime) > Date.parse('2016/06/06 ' + $scope.addTrend.startTime)) {
+                        var isExists = false;
+                        $scope.trendings.forEach(function(trending) {
+                            if(trending.location._id == $scope.addTrend.location._id && 
+                                trending.tag._id == $scope.addTrend.tag._id) {
+                                isExists = true;
+                            }
+                        });
+
+                        if(!isExists) {
+                            $http({
+                                method: 'PUT',
+                                url: '/api/trending',
+                                data: $scope.addTrend
+                            }).
+                            success(function(data, status, headers, config) {
+                                $scope.trendings.push(data);
+                                $scope.addTrend = {};
+                                var msgtrendingsAdded = BootstrapDialog.show({
+                                    type : buttonTypes[3],
+                                    message : 'Trendings added successfully.'
+                                });
+                                setTimeout(function() {
+                                    msgtrendingsAdded.close();
+                                }, 2000);
+                            }).
+                            error(function(data, status, headers, config) {
+                                console.log('trending err:', data);
+                                $scope.trendings = [];
+                            });
+                        } else {
+                            var msgaddTrend = BootstrapDialog.show({
+                                type: buttonTypes[4],
+                                message: "Same trending already exists."
+                            });
+                            setTimeout(function() {
+                                msgaddTrend.close();
+                            }, 2000);
+                        }
+                    } else {
+                        var msgaddTrend = BootstrapDialog.show({
+                            type: buttonTypes[4],
+                            message: "End Time should not be less than Start Time."
+                        });
+                        setTimeout(function() {
+                            msgaddTrend.close();
+                        }, 2000);
+                    }
+                } else {
+                    var msgaddTrend = BootstrapDialog.show({
+                        type: buttonTypes[4],
+                        message: "Please fill all fields."
+                    });
+                    setTimeout(function() {
+                        msgaddTrend.close();
+                    }, 2000);
+                }
+            } else {
+                if($scope.addTrend.location && $scope.addTrend.tag && $scope.addTrend.boostValue) {
+                    var isExists = false;
+                    $scope.trendings.forEach(function(trending) {
+                        if(trending.location._id == $scope.addTrend.location._id && 
+                            trending.tag._id == $scope.addTrend.tag._id) {
+                            isExists = true;
+                        }
+                    });
+
+                    if(!isExists) {
+                        $http({
+                            method: 'PUT',
+                            url: '/api/trending',
+                            data: $scope.addTrend
+                        }).
+                        success(function(data, status, headers, config) {
+                            $scope.trendings.push(data);
+                            $scope.addTrend = {};
+                            var msgtrendingsAdded = BootstrapDialog.show({
+                                type : buttonTypes[3],
+                                message : 'Trendings added successfully.'
+                            });
+                            setTimeout(function() {
+                                msgtrendingsAdded.close();
+                            }, 2000);
+                        }).
+                        error(function(data, status, headers, config) {
+                            console.log('trending err:', data);
+                            $scope.trendings = [];
+                        });
+                    } else {
+                        var msgaddTrend = BootstrapDialog.show({
+                            type: buttonTypes[4],
+                            message: "Same trending already exists."
+                        });
+                        setTimeout(function() {
+                            msgaddTrend.close();
+                        }, 2000);
+                    }
+                } else {
+                    var msgaddTrend = BootstrapDialog.show({
+                        type: buttonTypes[4],
+                        message: "Please fill all fields."
+                    });
+                    setTimeout(function() {
+                        msgaddTrend.close();
+                    }, 2000);
+                }
+            }
+        } else {
+            var msgaddTrend = BootstrapDialog.show({
+                type: buttonTypes[4],
+                message: "You don't have rights to perform this action."
+            });
+            setTimeout(function() {
+                msgaddTrend.close();
+            }, 2000);
+        }
+    }
+
+    $scope.dispUpdate = function(id, index) {
+        $scope.dispUpdateIndex = index;
+        $http({
+            method: 'GET',
+            url: '/api/fetchtrending/' + id
+        }).
+        success(function(data, status, headers, config) {
+            $scope.editTrending = data;
+            $scope.editTrending.startTime = $filter('date')($scope.editTrending.startTime, 'shortTime');
+            $scope.editTrending.endTime = $filter('date')($scope.editTrending.endTime, 'shortTime');
+        }).
+        error(function(data, status, headers, config) {
+            $scope.editTrending = {}
+        });
+    }
+
+    $scope.update = function(id) {
+        if(loggedinUser.updateArticles) {
+            if($scope.editTrending.isScheduled) {
+                if($scope.editTrending.location && $scope.editTrending.tag && $scope.editTrending.boostValue
+                    && $scope.editTrending.startTime && $scope.editTrending.endTime) {
+                    if(Date.parse('2016/06/06 ' + $scope.editTrending.endTime) > Date.parse('2016/06/06 ' + $scope.editTrending.startTime)) {
+                        var isExists = false;
+                        $scope.trendings.forEach(function(trending, index) {
+                            if(trending.location._id == $scope.editTrending.location._id && 
+                                trending.tag._id == $scope.editTrending.tag._id && index == !$scope.dispUpdateIndex) {
+                                isExists = true;
+                            }
+                        });
+
+                        if(!isExists) {
+                            $http({
+                                method: 'POST',
+                                url: '/api/trending/' + id,
+                                data: $scope.editTrending
+                            }).
+                            success(function(data, status, headers, config) {
+                                $scope.trendings[$scope.dispUpdateIndex] = data;
+                                $('#modTrend').modal('hide');
+                                var msgtrendingUpdated = BootstrapDialog.show({
+                                    type : buttonTypes[3],
+                                    message : 'Trending updated successfully.'
+                                });
+                                setTimeout(function() {
+                                    msgtrendingUpdated.close();
+                                }, 2000);           
+                            }).
+                            error(function(data, status, headers, config) {
+                                console.log('update trendings err:', data);
+                            });
+                        } else {
+                            var msgaddTrend = BootstrapDialog.show({
+                                type: buttonTypes[4],
+                                message: "Same trending already exists."
+                            });
+                            setTimeout(function() {
+                                msgaddTrend.close();
+                            }, 2000);
+                        }
+                    } else {
+                        var msgaddTrend = BootstrapDialog.show({
+                            type: buttonTypes[4],
+                            message: "End Time should not be less than Start Time."
+                        });
+                        setTimeout(function() {
+                            msgaddTrend.close();
+                        }, 2000);
+                    }                
+                } else {
+                    var msgupdateTrend = BootstrapDialog.show({
+                        type: buttonTypes[4],
+                        message: "Please fill all fields."
+                    });
+                    setTimeout(function() {
+                        msgupdateTrend.close();
+                    }, 2000);
+                }
+            } else {
+                if($scope.editTrending.location && $scope.editTrending.tag
+                    && $scope.editTrending.boostValue) {
+                    var isExists = false;
+                    $scope.trendings.forEach(function(trending, index) {
+                        if(trending.location._id == $scope.editTrending.location._id && 
+                            trending.tag._id == $scope.editTrending.tag._id && index == !$scope.dispUpdateIndex) {
+                            isExists = true;
+                        }
+                    });
+
+                    if(!isExists) {
+                        $http({
+                            method: 'POST',
+                            url: '/api/trending/' + id,
+                            data: $scope.editTrending
+                        }).
+                        success(function(data, status, headers, config) {
+                            $scope.trendings[$scope.dispUpdateIndex] = data;
+                            $('#modTrend').modal('hide');
+                            var msgtrendingUpdated = BootstrapDialog.show({
+                                type : buttonTypes[3],
+                                message : 'Trending updated successfully.'
+                            });
+                            setTimeout(function() {
+                                msgtrendingUpdated.close();
+                            }, 2000);           
+                        }).
+                        error(function(data, status, headers, config) {
+                            console.log('update trendings err:', data);
+                        });
+                    } else {
+                        var msgaddTrend = BootstrapDialog.show({
+                            type: buttonTypes[4],
+                            message: "Same trending already exists."
+                        });
+                        setTimeout(function() {
+                            msgaddTrend.close();
+                        }, 2000);
+                    }
+                } else {
+                    var msgupdateTrend = BootstrapDialog.show({
+                        type: buttonTypes[4],
+                        message: "Please fill all fields."
+                    });
+                    setTimeout(function() {
+                        msgupdateTrend.close();
+                    }, 2000);
+                }
+            }
+        } else {
+            var msgaddTrend = BootstrapDialog.show({
+                type: buttonTypes[4],
+                message: "You don't have rights to perform this action."
+            });
+            setTimeout(function() {
+                msgaddTrend.close();
+            }, 2000);
+        }
+    }
+
+    $scope.delete = function(id, index) {
+        if(loggedinUser.delArticles) {
+            $http({
+                method: 'Delete',
+                url: '/api/trending/' + id
+            }).
+            success(function(data, status, headers, config) {
+                $scope.trendings.splice(index, 1);
+                var msgdelTrending = BootstrapDialog.show({
+                    type : buttonTypes[3],
+                    message : 'Trending deleted successfully.'
+                });
+                setTimeout(function() {
+                    msgdelTrending.close();
+                }, 2000);           
+            }).
+            error(function(data, status, headers, config) {
+                console.log('delete trending err:', data);
+            });
+        } else {
+            var msgaddTrend = BootstrapDialog.show({
+                type: buttonTypes[4],
+                message: "You don't have rights to perform this action."
+            });
+            setTimeout(function() {
+                msgaddTrend.close();
+            }, 2000);
+        }
+    }
+
+    $scope.enable = function(boolean, id, index) {
+        if(loggedinUser.updateArticles) {
+            $http({
+                method: 'POST',
+                url: '/api/enabletrending/' + id,
+                data: {'bool':boolean}
+            }).
+            success(function(data, status, headers, config) {
+                $scope.trendings[index].isEnabled = boolean;
+                if(boolean) {
+                    var msgenableTrending = BootstrapDialog.show({
+                        type : buttonTypes[3],
+                        message : 'Trending enabled successfully.'
+                    });
+                } else {
+                    var msgenableTrending = BootstrapDialog.show({
+                        type : buttonTypes[3],
+                        message : 'Trending disabled successfully.'
+                    });
+                }
+                setTimeout(function() {
+                    msgenableTrending.close();
+                }, 2000);           
+            }).
+            error(function(data, status, headers, config) {
+                console.log('enab trendings err:', data);
+            });
+        } else {
+            var msgaddTrend = BootstrapDialog.show({
+                type: buttonTypes[4],
+                message: "You don't have rights to perform this action."
+            });
+            setTimeout(function() {
+                msgaddTrend.close();
+            }, 2000);
+        }
+    }
+
+    $scope.api = function(index) {
+        // console.log('latlng:', $scope.trendings[index].location.details.geometry.location);
+        $http({
+            method: 'GET',
+            url: '/api/trendings/' + $scope.trendings[index].location.details.geometry.location.lat
+                + ',' + $scope.trendings[index].location.details.geometry.location.lng
+        }).
+        success(function(data, status, headers, config) {
+            var userlocationId = $scope.trendings[index].location._id;
+            console.log('tags api data:', data);
+            $http({
+                method: 'POST',
+                url: '/api/trendingarticles',
+                data: {
+                    tags: data,
+                    userlocationId: userlocationId
+                }
+            }).
+            success(function(data, status, headers, config) {
+                console.log('trendingArticles api data:', data);
+            }).error(function(data, status, headers, config) {
+                console.log('trendingArticles api err:', data);
+            });
+        }).
+        error(function(data, status, headers, config) {
+            console.log('tags api err:', data);
+        });
+    }
+}
+
+
 function LogoutCtrl($scope, $http) {
     console.log('test');
     window.location.href = "/logout";
@@ -1364,22 +1921,32 @@ function LocationsCtrl($scope, $http) {
     $scope.add = function() {
         if(loggedinUser.addLocations) {
             console.log(typeof($scope.addLocation.details), 'details');
-            $http({
-                method: 'POST',
-                data: $scope.addLocation,
-                url: '/api/locations'
-            }).
-            success(function(data, status, headers, config) {
-                $scope.locations.push(data);
-                $scope.addLocation = {};
-                var msglocationAdded = BootstrapDialog.show({
-                    type : buttonTypes[3],
-                    message : 'Location added successfully.'
+            if($scope.addLocation.name && (typeof $scope.addLocation.details) === Object) {
+                $http({
+                    method: 'POST',
+                    data: $scope.addLocation,
+                    url: '/api/locations'
+                }).
+                success(function(data, status, headers, config) {
+                    $scope.locations.push(data);
+                    $scope.addLocation = {};
+                    var msglocationAdded = BootstrapDialog.show({
+                        type : buttonTypes[3],
+                        message : 'Location added successfully.'
+                    });
+                    setTimeout(function() {
+                        msglocationAdded.close();
+                    }, 2000);
+                });
+            } else {
+                var msgMandetory = BootstrapDialog.show({
+                    type: buttonTypes[4],
+                    message: "Please select Address."
                 });
                 setTimeout(function() {
-                    msglocationAdded.close();
+                    msgMandetory.close();
                 }, 2000);
-            });
+            }
         } else {
             var msgaddLocations = BootstrapDialog.show({
                 type : buttonTypes[5],
@@ -1447,7 +2014,10 @@ function LocationsCtrl($scope, $http) {
 function UsersCtrl($scope, $http, $route, Upload, $timeout) {
 
     $scope.page = 0;
-    $scope.users = {};
+    // $scope.users = [];
+    // $scope.usersLikes = [];
+    // $scope.usersDislikes = [];
+    // $scope.usersTags = [];
     var usersUrl = '/api/users/' + $scope.page;
     $http({
         method: 'GET',
@@ -1462,6 +2032,28 @@ function UsersCtrl($scope, $http, $route, Upload, $timeout) {
 
     console.log($scope.users);
 
+    // $http({
+    //     method: 'GET',
+    //     url: '/api/getlikes'
+    // }).
+    // success(function(data, status, headers, config) {
+    //     $scope.likes = data;
+    // }).
+    // error(function(data, status, headers, config) {
+    //     $scope.likes = []
+    // });
+
+    $http({
+        method: 'GET',
+        url: '/api/getusersdislikes'
+    }).
+    success(function(data, status, headers, config) {
+        $scope.usersDislikes = data;
+    }).
+    error(function(data, status, headers, config) {
+        $scope.usersDislikes = []
+    });
+
     $scope.fetchUsers = function(direction) {
 
         var paginate = false;
@@ -1475,6 +2067,7 @@ function UsersCtrl($scope, $http, $route, Upload, $timeout) {
         };
 
         if (paginate) {
+            console.log('fetchUsers');
             var articlesUrl = '/api/users/' + $scope.page;
             $http({
                 method: 'GET',
@@ -1489,7 +2082,7 @@ function UsersCtrl($scope, $http, $route, Upload, $timeout) {
     }
 }
 
-function StaffsCtrl($scope, $http, $route, Upload, $timeout) {
+function StaffsCtrl($scope, $http, $route, Upload, $timeout, $filter) {
     $scope.page = 0;
     $scope.staffs = {};
     var staffsUrl = '/api/fetchstaffs/' + $scope.page;
@@ -1499,10 +2092,100 @@ function StaffsCtrl($scope, $http, $route, Upload, $timeout) {
     }).
     success(function(data, status, headers, config) {
         $scope.staffs = data;
+
+        // ^Replace this to UserCtrl from StaffCtrl
+        $http({
+            method: 'GET',
+            url: '/api/getuserlocations'
+        }).
+        success(function(data, status, headers, config) {
+            $scope.userlocations = data;
+
+            staffsLoop:
+            for(var i in $scope.staffs) {
+                $scope.staffs[i].locationCount = 0;
+                $scope.staffs[i].locationMap = [];
+
+                userlocationsLoop:
+                for(var j in $scope.userlocations) {
+                    if($scope.staffs[i]._id == $scope.userlocations[j].userId._id) {
+                        $scope.staffs[i].locationCount += 1;
+                        $scope.staffs[i].locationMap.push($scope.userlocations[j].locationId);
+                        // break userlocationsLoop;
+                    }
+                }   
+            }
+        }).
+        error(function(data, status, headers, config) {
+            $scope.userlocations = []
+        });
+        // $Replace this to UserCtrl from StaffCtrl
     }).
     error(function(data, status, headers, config) {
         $scope.staffs = []
     });
+
+    // ^Replace this to UserCtrl from StaffCtrl
+    $scope.openLocationModal = function(selector, staff) {
+        $(selector).modal();
+        console.log('staff:', staff);
+        userLocationMap(staff.locationMap, $filter);
+        $scope.locations = staff.locationMap;
+        $scope.staffId = staff._id;
+        
+        $scope.years = [];
+        for (var i = 0; i < 8; i++) {
+           $scope.years.push(new Date().getFullYear() - i);   
+        }
+
+        $scope.months = ["January", "February", "March", "April", "May", "June", "July", 
+                        "August", "September", "October", "November", "December"];
+
+        var daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
+        $scope.dateInMonth = [];
+        for (var i = 1; i <= daysInMonth; i++) {
+           $scope.dateInMonth.push(i);   
+        }
+    }
+
+    $scope.selectDay = function(value) {
+        $scope.selectedDay = value;
+        makeDate($scope.selectedYear, $scope.selectedMonth, value)
+    }
+
+    $scope.selectMonth = function(value) {
+        $scope.selectedMonth = $scope.months.indexOf(value);
+        makeDate($scope.selectedYear, $scope.selectedMonth, $scope.selectedDay)
+    }
+
+    $scope.selectYear = function(value) {
+        $scope.selectedYear = value;
+        makeDate(value, $scope.selectedMonth, $scope.selectedDay)
+    }
+
+    function makeDate(year, month, day) {
+        console.log('makeDate:', new Date(year, month, day));
+        // console.log('makeDate parse:', new Date(Date.parse(month.substring(0, 3) + ' ' + day + ', ' + year)));
+        if(new Date(year, month, day) != 'Invalid Date') {
+            console.log('hai');
+            $http({
+                method: 'POST',
+                url: '/api/filterlocations',
+                data: {
+                    selectedDate: new Date(year, month, day),
+                    staffId: $scope.staffId
+                }
+            }).
+            success(function(data, status, headers, config) {
+                console.log('makeDate data:', data);
+                $scope.filtereduserLocations = data;
+            }).
+            error(function(data, status, headers, config) {
+                console.log('makeDate err:', data);
+            })
+        }
+    }
+    // $Replace this to UserCtrl from StaffCtrl
 
     $scope.fetchStaffs = function(direction) {
 

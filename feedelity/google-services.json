@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "662660625990",
+    "project_id": "myfeedo-gcm"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662660625990:android:20be25653f04df0c",
+        "android_client_info": {
+          "package_name": "com.ifelsetech.myfeedo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwauNQb9Zd8jn7FkRMM2yC3xbtx0S_PaY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

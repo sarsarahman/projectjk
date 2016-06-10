@@ -30,7 +30,7 @@ section.content
         th Gender
         th Mobile
         th Location
-        //- th User Likes
+        th User Locations
         //- th Likes
         //- th Dislikes
         th Actions
@@ -44,7 +44,9 @@ section.content
         td {{staff.gender}}
         td {{staff.mobileNumber}}
         td {{staff.location}}
-        //- td
+        td 
+          a(href='', ng-click='openLocationModal("#modUserLocation", staff)')
+            {{staff.locationCount}}
         //- td
         //- td
         td
@@ -102,3 +104,49 @@ section.content
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='update()') Save
+
+.modal.fade#modUserLocation(tabindex="-1", role="dialog", aria-labelledby="Edit User Location", aria-hidden="true")
+  .modal-dialog.modal-lg
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modStaffLbl.modal-title User Location
+      .modal-body
+        form.form-horizontal(role='form', name='locationMap')
+          .form-group.form-group-sm
+            .col-sm-4
+              .row
+                .col-sm-4
+                  ui-select(id='editGender',ng-model='selectedDay', ng-change="selectDay(selectedDay)", theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+                    ui-select-match(placeholder='Day') {{$select.selected}}
+                    ui-select-choices(repeat='date in dateInMonth | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                      div(ng-bind-html='date | highlight: $select.search')
+                .col-sm-4
+                  ui-select(id='editGender',ng-model='selectedMonth', ng-change="selectMonth(selectedMonth)", theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+                    ui-select-match(placeholder='Month') {{$select.selected}}
+                    ui-select-choices(repeat='month in months | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                      div(ng-bind-html='month | highlight: $select.search')
+                .col-sm-4
+                  ui-select(id='editGender',ng-model='selectedYear', ng-change="selectYear(selectedYear)", theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+                    ui-select-match(placeholder='Year') {{$select.selected}}
+                    ui-select-choices(repeat='year in years | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                      div(ng-bind-html='year | highlight: $select.search')
+              ul(ng-repeat="location in filtereduserLocations")
+                li
+                  a(href='', id="marker{{$index}}")
+                    {{location.locationId.name}} - {{location.locatedOn | date: 'fullDate'}}
+                    //- {{location.locatedOn | date: 'fullDate'}}
+                    //- {{location.locatedOn | date: 'MMM d, y h:mm a'}}
+            .col-sm-8
+              #userLocationMap(style='height:500px;')
+        //- .container
+          .row
+            .col-sm-6
+            .col-sm-6
+              #userLocationMap(style='width:74%; height:500px;')
+
+script.
+  //Date picker
+  $('#datepicker').datepicker({
+    autoclose: true
+  });

@@ -1,0 +1,138 @@
+section.content-header
+  h1 Trends configuration
+  ol.breadcrumb
+    li
+      a(href='/')
+        i.fa.fa-dashboard
+        |  Home
+    li.active Config Trend
+
+section.content
+  //- .bootstrap-timepicker
+    .form-group
+      label Time picker
+      .input-group
+        input.form-control.timepicker(type="text")
+        .input-group-addon
+          i.fa.fa-clock-o
+  table.table.table-striped.table-bordered.table-hover
+    thead
+      tr
+        th 
+        th Location
+        th Tag Name
+        th Boost Value
+        th Schedule
+        th Start Time
+        th End Time
+        th Actions
+        th API
+    tbody
+      tr
+        td
+        td
+          ui-select(id='editLocation',ng-model='addTrend.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false')
+            ui-select-match(placeholder='Select an address...') {{$select.selected.name}}
+            ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+              div(ng-bind-html='location.name | highlight: $select.search')
+        td
+          ui-select(id='editTag',ng-model='addTrend.tag', theme='bootstrap', ng-disabled='disabled', reset-search-input='false')
+            ui-select-match(placeholder='Select tags...') {{$select.selected.name}}
+            ui-select-choices(repeat='tag in trimmedTags | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+              div(ng-bind-html='tag.name | highlight: $select.search')
+        td
+          input.form-control(type="text", ng-model='addTrend.boostValue')
+        td(style="text-align:center; padding-top:14px;")
+          input(type="checkbox", ng-model='addTrend.isScheduled')
+        td.bootstrap-timepicker
+          input.form-control.timepicker(type='text', ng-model='addTrend.startTime', ng-change='changeTime("add-startTime")', ng-disabled="!addTrend.isScheduled")
+        td.bootstrap-timepicker
+          input.form-control.timepicker(type='text', ng-model='addTrend.endTime', ng-change='changeTime("add-endTime")', ng-disabled="!addTrend.isScheduled")
+        td
+          button.btn-sm.btn.btn-primary(type="submit", ng-click='add()')
+            i.glyphicon.glyphicon-plus
+            |  Add
+        td
+      tr(ng-repeat='trend in trendings track by $index | filter:searchText')
+        td
+          a(href='',ng-if='trend.isEnabled == false',ng-click='enable(true, trend._id, $index)',title='Enable')
+            i.glyphicon.glyphicon-ban-circle
+          a(href='',ng-if='trend.isEnabled == true',ng-click='enable(false, trend._id, $index)',title='Disable')
+            i.glyphicon.glyphicon-ban-circle
+        td {{trend.location.name}}
+        td {{trend.tag.name}}
+        td {{trend.boostValue}}
+        td(ng-if="!trend.isScheduled")
+        td(ng-if="!trend.isScheduled")
+        td(ng-if="!trend.isScheduled")
+        td(ng-if="trend.isScheduled", style="text-align:center;")
+          input(type="checkbox", ng-model='trend.isScheduled', disabled)
+        td(ng-if="trend.isScheduled") {{trend.startTime | date:'shortTime'}}
+        td(ng-if="trend.isScheduled") {{trend.endTime | date:'shortTime'}}
+        td
+          a.color-edit(href='', ng-click="dispUpdate(trend._id, $index)", data-toggle="modal", data-target="#modTrend", title='Edit')
+            i.glyphicon.glyphicon-pencil
+          &nbsp;&nbsp;
+          a.color-delete(href='',ng-click='delete(trend._id, $index)',title='Delete')
+            i.glyphicon.glyphicon-trash
+        td
+          button.btn-sm.btn.btn-primary(type="submit", ng-click='api($index)')
+            i.glyphicon.glyphicon-plus
+            |  API
+
+
+.modal.fade#modTrend(tabindex="-1", role="dialog", aria-labelledby="Edit Trend", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modTrendLbl.modal-title Edit Trend
+      .modal-body
+        form(role='form', name='editTrendForm')
+          input(type='hidden')
+          .form-group
+            label(for='editLocation', size='30') Location 
+            ui-select(id='editLocation',ng-model='editTrending.location', theme='bootstrap', ng-disabled='disabled', reset-search-input='false', style='width: 100%;')
+              ui-select-match(placeholder='Select an address...') {{$select.selected.name}}
+              ui-select-choices(repeat='location in trimmedLocations | filter: $select.search', refresh='refreshAddresses($select.search.name)', refresh-delay='0')
+                div(ng-bind-html='location.name | highlight: $select.search')
+
+          .form-group
+            label(for='editTags', size='30') Tags 
+            ui-select(ng-model='editTrending.tag', theme='bootstrap', ng-disabled='disabled', style='width: 100%;', name='editTags', id='editTags')
+              ui-select-match(placeholder='Select Tags...') {{$select.selected.name}}
+              ui-select-choices(repeat='tag in trimmedTags | filter: $select.search')
+                div(ng-bind-html='tag.name | highlight: $select.search') 
+
+          .form-group
+            label(for='editboostvalue') Boost Value
+            input.form-control#editTrending(type="text", name="editboostvalue", placeholder='Enter Boostvalue', size='60', ng-model="editTrending.boostValue", required)
+
+          .form-group
+            label(for='editSchedule') Schedule &nbsp;&nbsp;&nbsp;
+            input#editSchedule(type="checkbox", ng-model="editTrending.isScheduled")
+
+          .bootstrap-timepicker
+            .form-group(ng-show="editTrending.isScheduled")
+              label Start Time
+              .input-group
+                input.form-control.timepicker(type="text", ng-model='editTrending.startTime')
+                .input-group-addon
+                  i.fa.fa-clock-o
+
+          .bootstrap-timepicker
+            .form-group(ng-show="editTrending.isScheduled")
+              label End Time
+              .input-group
+                input.form-control.timepicker(type="text", ng-model='editTrending.endTime')
+                .input-group-addon
+                  i.fa.fa-clock-o
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update(editTrending._id)') Save
+
+script.
+  //Timepicker
+  $(".timepicker").timepicker({
+    showInputs: false
+  });

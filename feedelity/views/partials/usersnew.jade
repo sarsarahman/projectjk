@@ -11,23 +11,25 @@ section.content
   table.table.table-striped.table-bordered.table-hover
     thead
       tr
-        th User ID
+        //- th User ID
         th Display Picture
         th Name
         th Email
         th Mobile No
         th Location
-        th User Likes
+        th Preferred Tags
         th Likes
         th Dislikes
+        th User Locations
         th Actions
     tbody
       tr(ng-repeat='user in users track by $index | filter:searchText')
-        td {{user._id}}
+        //- td {{user._id}}
         td
         td {{user.firstName}} {{user.lastName}}
         td {{user.email}}
         td
+        td {{user.location.name}}
         td
         td
         td

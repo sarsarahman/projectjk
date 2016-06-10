@@ -117,11 +117,11 @@ block body
                   li.footer
                     a(href='#') View all
               //- Tasks: style can be found in dropdown.less
-              //- li.dropdown.tasks-menu
-                a.dropdown-toggle(href='#', data-toggle='dropdown')
-                  i.fa.fa-flag-o
-                  span.label.label-danger 9
-                ul.dropdown-menu
+              li.dropdown.tasks-menu
+                a(href='', data-toggle="modal", data-target="#modSendMessage")
+                  i.fa.fa-envelope-o
+                  span.hidden-xs  Send Message
+                //- ul.dropdown-menu
                   li.header You have 9 tasks
                   li
                     //- inner menu: contains the actual data
@@ -240,9 +240,9 @@ block body
                     |  Dashboard v2
             li
               a(href='', ng-click='refresh()')
-                i.fa.fa-files-o
+                i.fa.fa-spinner
                 span Fetch Feeds
-            li.active.treeview
+            li.treeview
               a(href='')
                 i.fa.fa-files-o
                 span Articles
@@ -250,28 +250,28 @@ block body
               ul.treeview-menu
                 li
                   a(href='articles/pending')
-                    i.fa.fa-circle-o
+                    //- i.fa.fa-circle-o
                     |  Pending Articles
                     span.label.label-primary.pull-right {{articlesCount.pendingArticlesCount}}
                 li
                   a(href='articles/approved')
-                    i.fa.fa-circle-o
+                    //- i.fa.fa-circle-o
                     |  Approved Articles
                     small.label.pull-right.bg-green {{articlesCount.approvedArticlesCount}}
                 li
                   a(href='articles/starred')
-                    i.fa.fa-circle-o
+                    //- i.fa.fa-circle-o
                     |  Starred Articles
                     small.label.pull-right.bg-yellow {{articlesCount.starredArticlesCount}}
                 if user.adminLevel === 1
                   li
                     a(href='articles/deleted')
-                      i.fa.fa-circle-o
+                      //- i.fa.fa-circle-o
                       |  Deleted Articles
                       small.label.label-danger.pull-right {{articlesCount.deletedArticlesCount}}
             li
               a(href='feeds')
-                i.fa.fa-pie-chart
+                i.fa.fa-wrench
                 span Config
             li
               a(href='cats')
@@ -279,24 +279,28 @@ block body
                 span Categories
             li.treeview
               a(href='tags')
-                i.fa.fa-edit
+                i.fa.fa-tags
                 span Tags
+            li.treeview
+              a(href='trends')
+                i.fa.fa-line-chart
+                span Trending
             li
               a(href='locations')
-                i.fa.fa-table
+                i.fa.fa-location-arrow
                 span Locations
             if user.adminLevel === 1
               li
                 a(href='staffs')
-                  i.fa.fa-calendar
-                  span Staffs
+                  i.fa.fa-user
+                  span Moderators
               li
                 a(href='staffsrole')
-                  i.fa.fa-envelope
-                  span Staffs Role
+                  i.fa.fa-shield
+                  span Moderators Role
               li
                 a(href='users')
-                  i.fa.fa-envelope
+                  i.fa.fa-users
                   span Users
         //- /.sidebar
       //- Content Wrapper. Contains page content
@@ -438,6 +442,30 @@ block body
         immediately after the control sidebar
       .control-sidebar-bg
     //- ./wrapper
+    .modal.fade#modSendMessage(tabindex="-1", role="dialog", aria-labelledby="Send Message", aria-hidden="true")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+            h4#modArticleLbl.modal-title Send Message
+          .modal-body
+            form(role='form', name='sendMessageForm')
+              input(type='hidden')
+              .form-group
+                label(for='sendTitle') Title
+                input.form-control#sendTitle(type="text", name="sendTitle", placeholder='Enter Title', size='60', ng-model="sendMessage.title", required)
+              
+              .form-group
+                label(for='sendMessage') Message
+                input.form-control#sendMessage(type="text", name="sendMessage", placeholder='Enter Message', size='60', ng-model="sendMessage.message", required)
+
+              .form-group
+                label(for='sendcustomMsg') Custom Message
+                input.form-control#sendcustomMsg(type="text", name="sendcustomMsg", placeholder='Enter Custom Message', size='60', ng-model="sendMessage.customMessage", required)
+
+          .modal-footer
+            button.btn.btn-default(type="button", data-dismiss="modal") Close
+            button.btn.btn-primary(type="button", ng-click='sendMsg()') Send
     
     //- jQuery 2.2.0
     script(src='plugins/jQuery/jQuery-2.2.0.min.js')
@@ -462,6 +490,8 @@ block body
     script(src='plugins/fastclick/fastclick.js')
     //- Pace
     script(src='plugins/pace/pace.min.js')
+    //- Bootstrap-timepicker
+    script(src='plugins/timepicker/bootstrap-timepicker.min.js')
 
     script(src='js/app.min.js')
     //- script(src='js/demo.js')

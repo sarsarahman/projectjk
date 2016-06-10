@@ -66,24 +66,54 @@ section.content
   .row
     //- Left col
     section.col-lg-7.connectedSortable
+      //- Articles
+      .box.box-primary
+        .box-header
+          i.ion.ion-clipboard
+          h3.box-title Articles
+          //- .box-tools.pull-right
+            ul.pagination.pagination-sm.inline
+              li
+                a(href='#') «
+              li
+                a(href='#') 1
+              li
+                a(href='#') 2
+              li
+                a(href='#') 3
+              li
+                a(href='#') »
+        //- /.box-header
+        .box-body
+          ul.todo-list(ng-repeat="article in articlesDashboard")
+            li
+              span.text {{article.title | limitTo: 50}}
+              //- Emphasis label
+              small.label.label-danger
+                i.fa.fa-clock-o
+                |  pending
+              //- General tools such as edit or delete
+              .tools
+                i(title='Approve', ng-click='approveArticle($index)').fa.fa-check-circle
+                //- i.fa.fa-trash-o
       //- Custom tabs (Charts with tabs)
-      .nav-tabs-custom
+      //- .nav-tabs-custom
         //- Tabs within a box
         ul.nav.nav-tabs.pull-right
-          li.active
-            a(href='#revenue-chart', data-toggle='tab') Area
-          li
+          //- li.active
+            a(href='#articles', data-toggle='tab') Articles
+          //- li
             a(href='#sales-chart', data-toggle='tab') Donut
           li.pull-left.header
             i.fa.fa-inbox
-            |  Sales
+            |  Articles
         .tab-content.no-padding
           //- Morris chart - Sales
-          #revenue-chart.chart.tab-pane.active(style='position: relative; height: 300px;')
+          #articles.chart.tab-pane.active(style='position: relative; height: 300px;')
           #sales-chart.chart.tab-pane(style='position: relative; height: 300px;')
       //- /.nav-tabs-custom
       //- Chat box
-      .box.box-success
+      //- .box.box-success
         .box-header
           i.fa.fa-comments-o
           h3.box-title Chat
@@ -149,7 +179,7 @@ section.content
                 i.fa.fa-plus
       //- /.box (chat box)
       //- TO DO List
-      .box.box-primary
+      //- .box.box-primary
         .box-header
           i.ion.ion-clipboard
           h3.box-title To Do List
@@ -252,7 +282,7 @@ section.content
             |  Add item
       //- /.box
       //- quick email widget
-      .box.box-info
+      //- .box.box-info
         .box-header
           i.fa.fa-envelope
           h3.box-title Quick Email
@@ -276,8 +306,25 @@ section.content
     //- /.Left col
     //- right col (We are only adding the ID to make the widgets sortable)
     section.col-lg-5.connectedSortable
+      .box.box-primary
+        .box-header.with-border
+          h3.box-title Recently Added Articles
+        .box-body
+          ul.products-list.product-list-in-box(ng-repeat="article in recentarticlesDashboard")
+            li.item
+              //- .product-img
+                img(src='dist/img/default-50x50.gif', alt='Article Image')
+              .product-info
+                a.product-title(href='javascript:void(0)')
+                  | {{article.title}}
+                  //- span.label.label-warning.pull-right $1800
+                span.product-description
+                  | {{article.summary}}
+        .box-footer.text-center
+          a.uppercase(href='articles/pending') View All Articles
+
       //- Map box
-      .box.box-solid.bg-light-blue-gradient
+      //- .box.box-solid.bg-light-blue-gradient
         .box-header
           //- tools box
           .pull-right.box-tools
@@ -309,7 +356,7 @@ section.content
           //- /.row
       //- /.box
       //- solid sales graph
-      .box.box-solid.bg-teal-gradient
+      //- .box.box-solid.bg-teal-gradient
         .box-header
           i.fa.fa-th
           h3.box-title Sales Graph
@@ -339,7 +386,7 @@ section.content
         //- /.box-footer
       //- /.box
       //- Calendar
-      .box.box-solid.bg-green-gradient
+      //- .box.box-solid.bg-green-gradient
         .box-header
           i.fa.fa-calendar
           h3.box-title Calendar

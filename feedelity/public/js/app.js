@@ -39,6 +39,10 @@ config(['$routeProvider', '$locationProvider', function($routeProvider, $locatio
         templateUrl: 'partial/tagsnew',
         controller: TagsCtrl
     }).
+    when('/trends', {
+        templateUrl: 'partial/trends',
+        controller: TrendsCtrl
+    }).
     when('/locations', {
         templateUrl: 'partial/locationsnew',
         controller: LocationsCtrl
