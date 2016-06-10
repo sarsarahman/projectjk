@@ -1,4 +1,4 @@
 feedelity
 =========
 
-RSS feed manager written using AngularJS, MongoDB, Express and NodeJS.
+RSS feed manager written using MEAN Stack(MongoDB, Express, AngularJS and NodeJS).
