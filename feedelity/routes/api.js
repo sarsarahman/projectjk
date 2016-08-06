@@ -2779,6 +2779,17 @@ exports.getTrendingArticles = function(req, res) {
         }).save();
     });
 }
+
+exports.getTrendingTagArticles = function(req, res) {
+    Article.find({
+        // tags: tags[0].tag._id,
+        tags: req.params.tagId,
+        isActive: true
+    }).exec(function(err, articles) {
+        if(err) console.log('getTrendingTagArticles err:', err);
+        else res.json(articles);
+    });
+}
 // $Trending
 
 // ^UserLocation

@@ -1839,6 +1839,8 @@ function TrendsCtrl($scope, $http, Upload, $filter) {
         success(function(data, status, headers, config) {
             var userlocationId = $scope.trendings[index].location._id;
             console.log('tags api data:', data);
+            var tagsapi = data;
+            console.log('tagsapi:', tagsapi[0].tag._id, tagsapi[0].tag.name);
             $http({
                 method: 'POST',
                 url: '/api/trendingarticles',
@@ -1851,6 +1853,16 @@ function TrendsCtrl($scope, $http, Upload, $filter) {
                 console.log('trendingArticles api data:', data);
             }).error(function(data, status, headers, config) {
                 console.log('trendingArticles api err:', data);
+            });
+
+            $http({
+                method: 'GET',
+                url: '/api/articles/tag/' + tagsapi[0].tag._id
+            }).
+            success(function(data, status, headers, config) {
+                console.log('articles/tag/ api data:', data);
+            }).error(function(data, status, headers, config) {
+                console.log('articles/tag/ api err:', data);
             });
         }).
         error(function(data, status, headers, config) {

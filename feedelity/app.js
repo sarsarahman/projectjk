@@ -301,6 +301,7 @@ app.post('/api/approvearticle/:id', api.approveArticleDashboard); // Dashboard
 
 app.get('/api/trendings/:latlng', api.getTrendingTags);
 app.post('/api/trendingarticles', api.getTrendingArticles);
+app.get('/api/articles/tag/:tagId', api.getTrendingTagArticles);
 
 app.get('/api/fetchtrendings', api.getTrendings);
 app.get('/api/fetchtrending/:id', api.getTrending);
