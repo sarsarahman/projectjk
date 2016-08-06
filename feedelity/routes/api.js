@@ -39,8 +39,8 @@ exports.hasRights = function(req, res) {
 
 // Mongoose functions
 
-// mongoose.connect('mongodb://localhost/feedelityNew');
-mongoose.connect('mongodb://localhost/feedelity');
+mongoose.connect('mongodb://localhost/feedelityNew');
+// mongoose.connect('mongodb://localhost/feedelity');
 
 var db = mongoose.connection;
 
@@ -949,22 +949,22 @@ exports.unbanStaff = function(req, res) {
 // $Staffs
 
 exports.adminLogin = function(userData, callback) {
-    addUser = new AdminUser({
-        name: 'Abdur Rahman',
-        username: 'admin',
-        password: 'password',
-        email: 'sarsarahman@gmail.com',
-        gender: 'Male',
-        mobileNumber: '9840903819',
-        location: 'Chennai',
-        dp: 'String',
-        status: true
-    });
+    // addUser = new AdminUser({
+    //     name: 'Abdur Rahman',
+    //     username: 'admin',
+    //     password: 'password',
+    //     email: 'sarsarahman@gmail.com',
+    //     gender: 'Male',
+    //     mobileNumber: '9840903819',
+    //     location: 'Chennai',
+    //     dp: 'String',
+    //     status: true
+    // });
 
-    AdminUser.create(addUser).then(function(addUser) {
-        // res.status(200).send(adduser);
-          callback(addUser);
-    });
+    // AdminUser.create(addUser).then(function(addUser) {
+    //     // res.status(200).send(adduser);
+    //       callback(addUser);
+    // });
 
     AdminUser.findOne({
         username: userData.username,

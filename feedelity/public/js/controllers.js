@@ -1830,7 +1830,7 @@ function TrendsCtrl($scope, $http, Upload, $filter) {
     }
 
     $scope.api = function(index) {
-        // console.log('latlng:', $scope.trendings[index].location.details.geometry.location);
+        console.log('latlng:', $scope.trendings[index].location.details.geometry.location);
         $http({
             method: 'GET',
             url: '/api/trendings/' + $scope.trendings[index].location.details.geometry.location.lat
@@ -1920,8 +1920,8 @@ function LocationsCtrl($scope, $http) {
 
     $scope.add = function() {
         if(loggedinUser.addLocations) {
-            console.log(typeof($scope.addLocation.details), 'details');
-            if($scope.addLocation.name && (typeof $scope.addLocation.details) === Object) {
+            console.log(typeof $scope.addLocation.details, $scope.addLocation, 'details');
+            if($scope.addLocation.name && $scope.addLocation.details) {
                 $http({
                     method: 'POST',
                     data: $scope.addLocation,
@@ -2007,9 +2007,7 @@ function LocationsCtrl($scope, $http) {
         else if (status == 'Incomplete') return 'label-warning';
         else return 'label-error';
     }
-
 }
-
 
 function UsersCtrl($scope, $http, $route, Upload, $timeout, $filter) {
 
