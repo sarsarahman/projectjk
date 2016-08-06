@@ -2011,7 +2011,7 @@ function LocationsCtrl($scope, $http) {
 }
 
 
-function UsersCtrl($scope, $http, $route, Upload, $timeout) {
+function UsersCtrl($scope, $http, $route, Upload, $timeout, $filter) {
 
     $scope.page = 0;
     // $scope.users = [];
@@ -2025,12 +2025,102 @@ function UsersCtrl($scope, $http, $route, Upload, $timeout) {
     }).
     success(function(data, status, headers, config) {
         $scope.users = data;
+
+        // ^Replace this to UserCtrl from StaffCtrl
+        $http({
+            method: 'GET',
+            url: '/api/getuserlocations'
+        }).
+        success(function(data, status, headers, config) {
+            $scope.userlocations = data;
+
+            staffsLoop:
+            for(var i in $scope.users) {
+                $scope.users[i].locationCount = 0;
+                $scope.users[i].locationMap = [];
+
+                userlocationsLoop:
+                for(var j in $scope.userlocations) {
+                    if($scope.users[i]._id == $scope.userlocations[j].userId._id) {
+                        $scope.users[i].locationCount += 1;
+                        $scope.users[i].locationMap.push($scope.userlocations[j].locationId);
+                        // break userlocationsLoop;
+                    }
+                }
+            }
+        }).
+        error(function(data, status, headers, config) {
+            $scope.userlocations = []
+        });
+        // $Replace this to UserCtrl from StaffCtrl
     }).
     error(function(data, status, headers, config) {
         $scope.users = []
     });
 
     console.log($scope.users);
+
+    // ^Replace this to UserCtrl from StaffCtrl
+    $scope.openLocationModal = function(selector, user) {
+        $(selector).modal();
+        console.log('user:', user);
+        userLocationMap(user.locationMap, $filter);
+        $scope.locations = user.locationMap;
+        $scope.userId = user._id;
+        
+        $scope.years = [];
+        for (var i = 0; i < 8; i++) {
+           $scope.years.push(new Date().getFullYear() - i);   
+        }
+
+        $scope.months = ["January", "February", "March", "April", "May", "June", "July", 
+                        "August", "September", "October", "November", "December"];
+
+        var daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
+        $scope.dateInMonth = [];
+        for (var i = 1; i <= daysInMonth; i++) {
+           $scope.dateInMonth.push(i);   
+        }
+    }
+
+    $scope.selectDay = function(value) {
+        $scope.selectedDay = value;
+        makeDate($scope.selectedYear, $scope.selectedMonth, value)
+    }
+
+    $scope.selectMonth = function(value) {
+        $scope.selectedMonth = $scope.months.indexOf(value);
+        makeDate($scope.selectedYear, $scope.selectedMonth, $scope.selectedDay)
+    }
+
+    $scope.selectYear = function(value) {
+        $scope.selectedYear = value;
+        makeDate(value, $scope.selectedMonth, $scope.selectedDay)
+    }
+
+    function makeDate(year, month, day) {
+        console.log('makeDate:', new Date(year, month, day));
+        // console.log('makeDate parse:', new Date(Date.parse(month.substring(0, 3) + ' ' + day + ', ' + year)));
+        if(new Date(year, month, day) != 'Invalid Date') {
+            console.log('hai');
+            $http({
+                method: 'POST',
+                url: '/api/filterlocations',
+                data: {
+                    selectedDate: new Date(year, month, day),
+                    userId: $scope.userId
+                }
+            }).
+            success(function(data, status, headers, config) {
+                console.log('makeDate data:', data);
+                $scope.filtereduserLocations = data;
+            }).
+            error(function(data, status, headers, config) {
+                console.log('makeDate err:', data);
+            })
+        }
+    }
+    // $Replace this to UserCtrl from StaffCtrl
 
     // $http({
     //     method: 'GET',
@@ -2093,99 +2183,99 @@ function StaffsCtrl($scope, $http, $route, Upload, $timeout, $filter) {
     success(function(data, status, headers, config) {
         $scope.staffs = data;
 
-        // ^Replace this to UserCtrl from StaffCtrl
-        $http({
-            method: 'GET',
-            url: '/api/getuserlocations'
-        }).
-        success(function(data, status, headers, config) {
-            $scope.userlocations = data;
+        // // ^Replace this to UserCtrl from StaffCtrl
+        // $http({
+        //     method: 'GET',
+        //     url: '/api/getuserlocations'
+        // }).
+        // success(function(data, status, headers, config) {
+        //     $scope.userlocations = data;
 
-            staffsLoop:
-            for(var i in $scope.staffs) {
-                $scope.staffs[i].locationCount = 0;
-                $scope.staffs[i].locationMap = [];
+        //     staffsLoop:
+        //     for(var i in $scope.staffs) {
+        //         $scope.staffs[i].locationCount = 0;
+        //         $scope.staffs[i].locationMap = [];
 
-                userlocationsLoop:
-                for(var j in $scope.userlocations) {
-                    if($scope.staffs[i]._id == $scope.userlocations[j].userId._id) {
-                        $scope.staffs[i].locationCount += 1;
-                        $scope.staffs[i].locationMap.push($scope.userlocations[j].locationId);
-                        // break userlocationsLoop;
-                    }
-                }   
-            }
-        }).
-        error(function(data, status, headers, config) {
-            $scope.userlocations = []
-        });
-        // $Replace this to UserCtrl from StaffCtrl
+        //         userlocationsLoop:
+        //         for(var j in $scope.userlocations) {
+        //             if($scope.staffs[i]._id == $scope.userlocations[j].userId._id) {
+        //                 $scope.staffs[i].locationCount += 1;
+        //                 $scope.staffs[i].locationMap.push($scope.userlocations[j].locationId);
+        //                 // break userlocationsLoop;
+        //             }
+        //         }   
+        //     }
+        // }).
+        // error(function(data, status, headers, config) {
+        //     $scope.userlocations = []
+        // });
+        // // $Replace this to UserCtrl from StaffCtrl
     }).
     error(function(data, status, headers, config) {
         $scope.staffs = []
     });
 
-    // ^Replace this to UserCtrl from StaffCtrl
-    $scope.openLocationModal = function(selector, staff) {
-        $(selector).modal();
-        console.log('staff:', staff);
-        userLocationMap(staff.locationMap, $filter);
-        $scope.locations = staff.locationMap;
-        $scope.staffId = staff._id;
+    // // ^Replace this to UserCtrl from StaffCtrl
+    // $scope.openLocationModal = function(selector, staff) {
+    //     $(selector).modal();
+    //     console.log('staff:', staff);
+    //     userLocationMap(staff.locationMap, $filter);
+    //     $scope.locations = staff.locationMap;
+    //     $scope.staffId = staff._id;
         
-        $scope.years = [];
-        for (var i = 0; i < 8; i++) {
-           $scope.years.push(new Date().getFullYear() - i);   
-        }
+    //     $scope.years = [];
+    //     for (var i = 0; i < 8; i++) {
+    //        $scope.years.push(new Date().getFullYear() - i);   
+    //     }
 
-        $scope.months = ["January", "February", "March", "April", "May", "June", "July", 
-                        "August", "September", "October", "November", "December"];
+    //     $scope.months = ["January", "February", "March", "April", "May", "June", "July", 
+    //                     "August", "September", "October", "November", "December"];
 
-        var daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
-        $scope.dateInMonth = [];
-        for (var i = 1; i <= daysInMonth; i++) {
-           $scope.dateInMonth.push(i);   
-        }
-    }
+    //     var daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
+    //     $scope.dateInMonth = [];
+    //     for (var i = 1; i <= daysInMonth; i++) {
+    //        $scope.dateInMonth.push(i);   
+    //     }
+    // }
 
-    $scope.selectDay = function(value) {
-        $scope.selectedDay = value;
-        makeDate($scope.selectedYear, $scope.selectedMonth, value)
-    }
+    // $scope.selectDay = function(value) {
+    //     $scope.selectedDay = value;
+    //     makeDate($scope.selectedYear, $scope.selectedMonth, value)
+    // }
 
-    $scope.selectMonth = function(value) {
-        $scope.selectedMonth = $scope.months.indexOf(value);
-        makeDate($scope.selectedYear, $scope.selectedMonth, $scope.selectedDay)
-    }
+    // $scope.selectMonth = function(value) {
+    //     $scope.selectedMonth = $scope.months.indexOf(value);
+    //     makeDate($scope.selectedYear, $scope.selectedMonth, $scope.selectedDay)
+    // }
 
-    $scope.selectYear = function(value) {
-        $scope.selectedYear = value;
-        makeDate(value, $scope.selectedMonth, $scope.selectedDay)
-    }
+    // $scope.selectYear = function(value) {
+    //     $scope.selectedYear = value;
+    //     makeDate(value, $scope.selectedMonth, $scope.selectedDay)
+    // }
 
-    function makeDate(year, month, day) {
-        console.log('makeDate:', new Date(year, month, day));
-        // console.log('makeDate parse:', new Date(Date.parse(month.substring(0, 3) + ' ' + day + ', ' + year)));
-        if(new Date(year, month, day) != 'Invalid Date') {
-            console.log('hai');
-            $http({
-                method: 'POST',
-                url: '/api/filterlocations',
-                data: {
-                    selectedDate: new Date(year, month, day),
-                    staffId: $scope.staffId
-                }
-            }).
-            success(function(data, status, headers, config) {
-                console.log('makeDate data:', data);
-                $scope.filtereduserLocations = data;
-            }).
-            error(function(data, status, headers, config) {
-                console.log('makeDate err:', data);
-            })
-        }
-    }
-    // $Replace this to UserCtrl from StaffCtrl
+    // function makeDate(year, month, day) {
+    //     console.log('makeDate:', new Date(year, month, day));
+    //     // console.log('makeDate parse:', new Date(Date.parse(month.substring(0, 3) + ' ' + day + ', ' + year)));
+    //     if(new Date(year, month, day) != 'Invalid Date') {
+    //         console.log('hai');
+    //         $http({
+    //             method: 'POST',
+    //             url: '/api/filterlocations',
+    //             data: {
+    //                 selectedDate: new Date(year, month, day),
+    //                 staffId: $scope.staffId
+    //             }
+    //         }).
+    //         success(function(data, status, headers, config) {
+    //             console.log('makeDate data:', data);
+    //             $scope.filtereduserLocations = data;
+    //         }).
+    //         error(function(data, status, headers, config) {
+    //             console.log('makeDate err:', data);
+    //         })
+    //     }
+    // }
+    // // $Replace this to UserCtrl from StaffCtrl
 
     $scope.fetchStaffs = function(direction) {
 
